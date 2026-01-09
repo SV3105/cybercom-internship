@@ -43,7 +43,7 @@ body {
   background-color: rgb(98, 98, 236);
 }
 
-.nav_links.active{
+.nav_links:active{
   background-color:  rgb(98, 98, 236);
 }
 
