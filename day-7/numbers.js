@@ -21,7 +21,7 @@ console.log(y.toFixed(2));
 
 //toPrecision() --> returns a string of number with a specified length
 
-console.log(y.toPrecision(6));
+console.log(y.toPrecision(2));
 console.log(y.toPrecision(4));
 
 //Number() -> it converts string, boolean , null into number
@@ -31,5 +31,6 @@ console.log(y.toPrecision(4));
 
 // "" = Number() = 0 , parseInt = NaN
 // true = Number() = 1, parseInt = NaN
+// typeof null is object and typeof NaN is number
 
 

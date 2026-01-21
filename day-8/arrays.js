@@ -10,6 +10,9 @@ console.log(person instanceof Array);
 const fruits = ["Banana", "Orange", "Apple", "Mango"];
 fruits.splice(2, 0, "Lemon", "Kiwi");
 
+console.log(fruits);
+
+
 // 1st parameter -> where to add new ele.
 //2nd parameter -> how many ele. should removed
 
