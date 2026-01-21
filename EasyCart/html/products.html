@@ -3,8 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Products - EasyCart</title>
+    <title>Shop - EasyCart India</title>
     <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
 </head>
 <body>
     <header>
@@ -12,65 +14,130 @@
             <h1>EasyCart</h1>
             <ul>
                 <li><a href="../index.html">Home</a></li>
-                <li><a href="./product-details.html">Products</a></li>
-                <li><a href="cart.html">Cart</a></li>
-                <li><a href="login.html">Login</a></li>
-                <li><a href="signup.html">Sign Up</a></li>
-                <li><a href="orders.html">My Orders</a></li>
+                <li><a href="./products.html" class="active-nav">Collections</a></li>
+                <li><a href="./cart.html">Cart <i class="fas fa-shopping-cart"></i></a></li>
+                <li><a href="./auth.html">Login / Sign Up</a></li>
+                <li><a href="./orders.html">Orders</a></li>
             </ul>
         </nav>
     </header>
 
     <div class="container">
-        <h1>Our Products</h1>
-        <div class="products-grid">
-            <div class="product-card">
-                <img src="../images/earbuds.webp" width="100px" height="100px" alt="Product 1">
-                <h3>Wireless Earbuds</h3>
-                <p class="price">Rs. 1,299</p>
-                <a href="./product-details.html" class="btn">View Details</a>
-            </div>
-            <div class="product-card">
-                <img src="../images/smartwatch.webp"  width="100px" height="100px" alt="Product 2">
-                <h3>Smart Watch</h3>
-                <p class="price">Rs. 999</p>
-                <a href="./product-details.html" class="btn">View Details</a>
-            </div>
-            <div class="product-card">
-                <img src="../images/laptop.webp" width="100px" height="100px" alt="Product 3">
-                <h3>Laptop</h3>
-                <p class="price">Rs. 44,000</p>
-                <a href="./product-details.html" class="btn">View Details</a>
-            </div>
-            <div class="product-card">
-                <img src="../images/shoes.webp" width="100px" height="100px" alt="Product 4">
-                <h3>Shoes</h3>
-                <p class="price">Rs. 2299</p>
-                <a href="./product-details.html" class="btn">View Details</a>
-            </div>
-            <div class="product-card">
-                <img src="../images/Laptopbags.webp" width="100px" height="100px" alt="Product 5">
-                <h3>Laptop Bag</h3>
-                <p class="price">Rs. 1,999</p>
-                <a href="./product-details.html" class="btn">View Details</a>
-            </div>
-            <div class="product-card">
-                <img src="../images/suitcase.webp" width="100px" height="100px" alt="Product 6">
-                <h3>Suitcase</h3>
-                <p class="price">Rs. 3,999</p>
-                <a href="./product-details.html" class="btn">View Details</a>
-            </div>
-            <div class="product-card">
-                <img src="../images/smartphone.webp" width="100px" height="100px" alt="Product 7">
-                <h3>Smartphone</h3>
-                <p class="price">Rs. 35,299</p>
-                <a href="./product-details.html" class="btn">View Details</a>
-            </div>
-            <div class="product-card">
-                <img src="../images/perfume.webp" width="100px" height="100px" alt="Product 8">
-                <h3>Perfume</h3>
-                <p class="price">Rs. 599</p>
-                <a href="./product-details.html" class="btn">View Details</a>
+        <div class="page-content layout-transparent">
+            <h1 class="text-dark mb-4">Explore Collection</h1>
+            
+            <div class="shop-layout">
+                <!-- Filters -->
+                <aside class="filter-sidebar">
+                    <div class="filter-group">
+                        <h3>Categories</h3>
+                        <label class="filter-option"><input type="checkbox" name="category" value="electronics"> Electronics</label>
+                        <label class="filter-option"><input type="checkbox" name="category" value="fashion"> Fashion</label>
+                        <label class="filter-option"><input type="checkbox" name="category" value="home"> Home & Living</label>
+                        <label class="filter-option"><input type="checkbox" name="category" value="beauty"> Beauty</label>
+                    </div>
+                
+                    <div class="filter-group">
+                        <h3>Brands</h3>
+                        <label class="filter-option"><input type="checkbox" name="brand" value="boat"> boAt</label>
+                        <label class="filter-option"><input type="checkbox" name="brand" value="noise"> Noise</label>
+                        <label class="filter-option"><input type="checkbox" name="brand" value="hp"> HP</label>
+                        <label class="filter-option"><input type="checkbox" name="brand" value="hrx"> HRX</label>
+                        <label class="filter-option"><input type="checkbox" name="brand" value="fabindia"> Fabindia</label>
+                        <label class="filter-option"><input type="checkbox" name="brand" value="mamaearth"> Mamaearth</label>
+                        <label class="filter-option"><input type="checkbox" name="brand" value="titan"> Titan</label>
+                    </div>
+
+                    <button class="btn w-100" onclick="clearFilters()">Clear Filters</button>
+                </aside>
+
+                <!-- Products Grid -->
+                <div class="products-grid" id="productGrid">
+                    <!-- Electronics -->
+                    <div class="product-card" data-category="electronics" data-brand="boat">
+                        <img src="../images/earbuds.webp" alt="Wireless Earbuds">
+                        <h3>boAt Airdopes 141</h3>
+                        <p class="price">₹1,299</p>
+                        <a href="./product-details.html" class="btn">View Details</a>
+                    </div>
+                    <div class="product-card" data-category="electronics" data-brand="noise">
+                        <img src="../images/smartwatch.webp" alt="Smart Watch">
+                        <h3>Noise ColorFit</h3>
+                        <p class="price">₹1,999</p>
+                        <a href="./product-details.html" class="btn">View Details</a>
+                    </div>
+                    <div class="product-card" data-category="electronics" data-brand="hp">
+                        <img src="../images/laptop.webp" alt="Laptop">
+                        <h3>HP Pavilion 15</h3>
+                        <p class="price">₹55,000</p>
+                        <a href="./product-details.html" class="btn">View Details</a>
+                    </div>
+                    <div class="product-card" data-category="electronics" data-brand="boat">
+                        <img src="../images/earbuds.webp" alt="Headphones">
+                        <h3>boAt Rockerz 450</h3>
+                        <p class="price">₹1,499</p>
+                        <a href="./product-details.html" class="btn">View Details</a>
+                    </div>
+                     <div class="product-card" data-category="electronics" data-brand="smartphone">
+                        <img src="../images/smartphone.webp" alt="Smartphone">
+                        <h3>Samsung Galaxy M34</h3>
+                        <p class="price">₹16,999</p>
+                        <a href="./product-details.html" class="btn">View Details</a>
+                    </div>
+
+                    <!-- Fashion -->
+                    <div class="product-card" data-category="fashion" data-brand="hrx">
+                        <img src="../images/shoes.webp" alt="Shoes">
+                        <h3>HRX Sneakers</h3>
+                        <p class="price">₹2,299</p>
+                        <a href="./product-details.html" class="btn">View Details</a>
+                    </div>
+                     <div class="product-card" data-category="fashion" data-brand="fabindia">
+                        <img src="../images/Laptopbags.webp" alt="Bag">
+                        <h3>Fabindia Tote Bag</h3>
+                        <p class="price">₹1,599</p>
+                        <a href="./product-details.html" class="btn">View Details</a>
+                    </div>
+                    <div class="product-card" data-category="fashion" data-brand="titan">
+                        <img src="../images/smartwatch.webp" alt="Analog Watch" class="filter-sepia">
+                        <h3>Titan Neo Men</h3>
+                        <p class="price">₹4,495</p>
+                        <a href="./product-details.html" class="btn">View Details</a>
+                    </div>
+                    
+                    <!-- Home & Beauty -->
+                    <div class="product-card" data-category="home" data-brand="vip">
+                        <img src="../images/suitcase.webp" alt="Suitcase">
+                        <h3>VIP Trolley</h3>
+                        <p class="price">₹3,999</p>
+                        <a href="./product-details.html" class="btn">View Details</a>
+                    </div>
+                    <div class="product-card" data-category="beauty" data-brand="mamaearth">
+                        <img src="../images/perfume.webp" alt="Perfume">
+                        <h3>Mamaearth Eau De Parfum</h3>
+                        <p class="price">₹599</p>
+                        <a href="./product-details.html" class="btn">View Details</a>
+                    </div>
+
+                    <!-- More Dummy Products for density -->
+                     <div class="product-card" data-category="fashion" data-brand="hrx">
+                        <img src="../images/shoes.webp" alt="Sports Shoes" class="filter-hue-45">
+                        <h3>HRX Running Shoes</h3>
+                        <p class="price">₹2,899</p>
+                        <a href="./product-details.html" class="btn">View Details</a>
+                    </div>
+                     <div class="product-card" data-category="beauty" data-brand="mamaearth">
+                        <img src="../images/perfume.webp" alt="Face Wash" class="filter-hue-90">
+                        <h3>Uber Glow Face Wash</h3>
+                        <p class="price">₹399</p>
+                        <a href="./product-details.html" class="btn">View Details</a>
+                    </div>
+
+                    <div class="no-results" id="noResults">
+                        <i class="fas fa-search"></i>
+                        <p>No products found matching your filters.</p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -78,5 +145,73 @@
     <footer>
         <p>&copy; 2026 EasyCart. All rights reserved.</p>
     </footer>
+
+    <script>
+        // Filter Logic
+        document.addEventListener('DOMContentLoaded', () => {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            const products = document.querySelectorAll('.product-card');
+            const noResults = document.getElementById('noResults');
+
+            // Parse URL params
+            const urlParams = new URLSearchParams(window.location.search);
+            const initialCategory = urlParams.get('category');
+            const initialBrand = urlParams.get('brand');
+
+            // Set initial state from URL
+            if (initialCategory) {
+                const cb = document.querySelector(`input[name="category"][value="${initialCategory.toLowerCase()}"]`);
+                if(cb) cb.checked = true;
+            }
+            if (initialBrand) {
+                const cb = document.querySelector(`input[name="brand"][value="${initialBrand.toLowerCase()}"]`);
+                if(cb) cb.checked = true;
+            }
+
+            // Function to filter
+            function filterProducts() {
+                const selectedCategories = Array.from(document.querySelectorAll('input[name="category"]:checked')).map(cb => cb.value);
+                const selectedBrands = Array.from(document.querySelectorAll('input[name="brand"]:checked')).map(cb => cb.value);
+
+                let visibleCount = 0;
+
+                products.forEach(product => {
+                    const category = product.dataset.category;
+                    const brand = product.dataset.brand;
+
+                    const categoryMatch = selectedCategories.length === 0 || selectedCategories.includes(category);
+                    const brandMatch = selectedBrands.length === 0 || selectedBrands.includes(brand);
+
+                    if (categoryMatch && brandMatch) {
+                        product.style.display = 'block';
+                        visibleCount++;
+                    } else {
+                        product.style.display = 'none';
+                    }
+                });
+
+                noResults.style.display = visibleCount === 0 ? 'block' : 'none';
+            }
+
+            // Attach listeners
+            checkboxes.forEach(cb => cb.addEventListener('change', filterProducts));
+
+            // Initial Run
+            filterProducts();
+        });
+
+        function clearFilters() {
+            document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+            // Trigger change event to re-filter
+            const event = new Event('change');
+            if(document.querySelector('input[type="checkbox"]')) {
+                document.querySelector('input[type="checkbox"]').dispatchEvent(event);
+            }
+            // Or just call the function if event dispatch is tricky
+             const products = document.querySelectorAll('.product-card');
+             products.forEach(p => p.style.display = 'block');
+             document.getElementById('noResults').style.display = 'none';
+        }
+    </script>
 </body>
 </html>

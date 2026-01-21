@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login / Sign Up - EasyCart</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <h1>EasyCart</h1>
+            <ul>
+                <li><a href="../index.html">Home</a></li>
+                <li><a href="products.html">Products</a></li>
+                <li><a href="cart.html">Cart</a></li>
+                <li><a href="auth.html" class="active-nav">Login / Sign Up</a></li>
+                <li><a href="orders.html">My Orders</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <div class="auth-page-wrapper">
+        <div class="auth-container">
+            <!-- Left Side: Branding/Image -->
+            <div class="auth-left">
+                <div class="auth-content">
+                    <h2>Welcome Back!</h2>
+                    <p>Access your orders, wishlist, and recommendations.</p>
+                </div>
+            </div>
+
+            <!-- Right Side: Forms -->
+            <div class="auth-right">
+                <div class="auth-toggle">
+                    <button id="loginBtn" class="active" onclick="showLogin()">Login</button>
+                    <button id="signupBtn" onclick="showSignup()">Sign Up</button>
+                </div>
+
+                <!-- Login Form -->
+                <form id="loginForm" class="auth-form">
+                    <h3>Sign In</h3>
+                    <div class="social-login">
+                        <button type="button" class="social-btn"><i class="fab fa-google"></i></button>
+                        <button type="button" class="social-btn"><i class="fab fa-facebook-f"></i></button>
+                        <button type="button" class="social-btn"><i class="fab fa-twitter"></i></button>
+                    </div>
+                    <p class="separator"><span>or use your account</span></p>
+                    
+                    <div class="form-group">
+                        <input type="email" placeholder="Email" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="password" placeholder="Password" required>
+                    </div>
+                    <a href="#" class="forgot-pass">Forgot your password?</a>
+                    <button type="submit" class="btn">Sign In</button>
+                </form>
+
+                <!-- Signup Form -->
+                <form id="signupForm" class="auth-form" style="display: none;">
+                    <h3>Create Account</h3>
+                    <div class="social-login">
+                        <button type="button" class="social-btn"><i class="fab fa-google"></i></button>
+                        <button type="button" class="social-btn"><i class="fab fa-facebook-f"></i></button>
+                        <button type="button" class="social-btn"><i class="fab fa-twitter"></i></button>
+                    </div>
+                    <p class="separator"><span>or use your email for registration</span></p>
+
+                    <div class="form-group">
+                        <input type="text" placeholder="Full Name" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="email" placeholder="Email" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="password" placeholder="Password" required>
+                    </div>
+                    <button type="submit" class="btn">Sign Up</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 EasyCart. All rights reserved.</p>
+    </footer>
+
+    <script>
+        const loginForm = document.getElementById('loginForm');
+        const signupForm = document.getElementById('signupForm');
+        const loginBtn = document.getElementById('loginBtn');
+        const signupBtn = document.getElementById('signupBtn');
+        const authLeftH2 = document.querySelector('.auth-left h2');
+        const authLeftP = document.querySelector('.auth-left p');
+
+        function showLogin() {
+            loginForm.style.display = 'block';
+            signupForm.style.display = 'none';
+            loginBtn.classList.add('active');
+            signupBtn.classList.remove('active');
+            
+            // Update Text on Left Side with animation
+            updateLeftContent("Welcome Back!", "To keep connected with us please login with your personal info");
+        }
+
+        function showSignup() {
+            loginForm.style.display = 'none';
+            signupForm.style.display = 'block';
+            signupBtn.classList.add('active');
+            loginBtn.classList.remove('active');
+
+            // Update Text on Left Side with animation
+             updateLeftContent("Hello, Friend!", "Enter your personal details and start your journey with us");
+        }
+
+        function updateLeftContent(title, text) {
+            authLeftH2.style.opacity = 0;
+            authLeftP.style.opacity = 0;
+            setTimeout(() => {
+                authLeftH2.innerText = title;
+                authLeftP.innerText = text;
+                authLeftH2.style.opacity = 1;
+                authLeftP.style.opacity = 1;
+            }, 200);
+        }
+    </script>
+</body>
+</html>
