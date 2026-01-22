@@ -1,26 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login / Sign Up - EasyCart</title>
-    <link rel="stylesheet" href="../css/styles.css?v=4">
-    <link rel="stylesheet" href="../css/auth.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-</head>
-<body>
-    <header>
-        <nav>
-            <h1>EasyCart</h1>
-            <ul>
-                <li><a href="../index.html">Home</a></li>
-                <li><a href="products.html">Products</a></li>
-                <li><a href="cart.html">Cart</a></li>
-                <li><a href="auth.html" class="active-nav">Login / Sign Up</a></li>
-                <li><a href="orders.html">My Orders</a></li>
-            </ul>
-        </nav>
-    </header>
+<?php
+$title = "Login / Sign Up - EasyCart";
+$base_path = "../";
+$page = "auth";
+$extra_css = "auth.css";
+include '../includes/header.php';
+?>
 
     <div class="auth-page-wrapper">
         <div class="auth-container">
@@ -84,10 +68,6 @@
         </div>
     </div>
 
-    <footer>
-        <p>&copy; 2026 EasyCart. All rights reserved.</p>
-    </footer>
-
     <script>
         const loginForm = document.getElementById('loginForm');
         const signupForm = document.getElementById('signupForm');
@@ -127,5 +107,4 @@
             }, 200);
         }
     </script>
-</body>
-</html>
+<?php include '../includes/footer.php'; ?>

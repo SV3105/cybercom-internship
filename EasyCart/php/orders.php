@@ -1,25 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Orders - EasyCart</title>
-    <link rel="stylesheet" href="../css/styles.css?v=4">
-    <link rel="stylesheet" href="../css/orders.css">
-</head>
-<body>
-    <header>
-        <nav>
-            <h1>EasyCart</h1>
-            <ul>
-                <li><a href="../index.html">Home</a></li>
-                <li><a href="products.html">Products</a></li>
-                <li><a href="cart.html">Cart</a></li>
-                <li><a href="auth.html">Login / Sign Up</a></li>
-                <li><a href="orders.html">My Orders</a></li>
-            </ul>
-        </nav>
-    </header>
+<?php
+$title = "My Orders - EasyCart";
+$base_path = "../";
+$page = "orders";
+$extra_css = "orders.css";
+include '../includes/header.php';
+?>
 
     <div class="container">
         <div class="page-content">
@@ -70,8 +55,4 @@
         </div>
     </div>
 
-    <footer>
-        <p>&copy; 2026 EasyCart. All rights reserved.</p>
-    </footer>
-</body>
-</html>
+<?php include '../includes/footer.php'; ?>
