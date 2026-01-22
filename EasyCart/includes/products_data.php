@@ -232,4 +232,32 @@ $categories = [
         'image' => 'perfume.png' // Matches Mamaearth
     ]
 ];
+
+// Mock Order Data
+$orders = [
+    [
+        'id' => '12345',
+        'date' => 'January 15, 2026',
+        'status' => 'Delivered',
+        'status_code' => 'delivered',
+        'items' => ['boAt Airdopes 141', 'Noise ColorFit Pro'],
+        'total' => '3,298'
+    ],
+    [
+        'id' => '12344',
+        'date' => 'January 10, 2026',
+        'status' => 'In Transit',
+        'status_code' => 'transit',
+        'items' => ['HP Pavilion 15', 'Mechanical Keyboard'],
+        'total' => '55,490'
+    ],
+    [
+        'id' => '12343',
+        'date' => 'January 5, 2026',
+        'status' => 'Processing',
+        'status_code' => 'processing',
+        'items' => ['USB-C Hub', 'Gaming Mouse'],
+        'total' => '4,500'
+    ]
+];
 ?>

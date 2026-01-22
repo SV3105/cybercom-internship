@@ -3,6 +3,7 @@ $title = "My Orders - EasyCart";
 $base_path = "../";
 $page = "orders";
 $extra_css = "orders.css";
+include '../includes/products_data.php';
 include '../includes/header.php';
 ?>
 
@@ -10,47 +11,21 @@ include '../includes/header.php';
         <div class="page-content">
             <h1>My Orders</h1>
             <div class="orders-list">
+                <?php foreach($orders as $order): ?>
                 <div class="order-card">
                     <div class="order-header">
                         <div>
-                            <h3>Order #12345</h3>
-                            <p>Placed on: January 15, 2026</p>
+                            <h3>Order #<?php echo $order['id']; ?></h3>
+                            <p>Placed on: <?php echo $order['date']; ?></p>
                         </div>
                         <div>
-                            <span class="status-badge status-delivered">Delivered</span>
+                             <span class="status-badge status-<?php echo $order['status_code']; ?>"><?php echo $order['status']; ?></span>
                         </div>
                     </div>
-                    <p>Items: Wireless Headphones, Smart Watch</p>
-                    <p><strong>Total: $299.98</strong></p>
+                    <p>Items: <?php echo implode(', ', $order['items']); ?></p>
+                    <p><strong>Total: ₹<?php echo $order['total']; ?></strong></p>
                 </div>
-
-                <div class="order-card">
-                    <div class="order-header">
-                        <div>
-                            <h3>Order #12344</h3>
-                            <p>Placed on: January 10, 2026</p>
-                        </div>
-                        <div>
-                             <span class="status-badge status-transit">In Transit</span>
-                        </div>
-                    </div>
-                    <p>Items: Laptop Stand, Mechanical Keyboard</p>
-                    <p><strong>Total: $179.98</strong></p>
-                </div>
-
-                <div class="order-card">
-                    <div class="order-header">
-                        <div>
-                            <h3>Order #12343</h3>
-                            <p>Placed on: January 5, 2026</p>
-                        </div>
-                        <div>
-                             <span class="status-badge status-processing">Processing</span>
-                        </div>
-                    </div>
-                    <p>Items: USB-C Hub, Gaming Mouse</p>
-                    <p><strong>Total: $99.98</strong></p>
-                </div>
+                <?php endforeach; ?>
             </div>
         </div>
     </div>

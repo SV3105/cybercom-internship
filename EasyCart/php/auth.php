@@ -26,18 +26,14 @@ include '../includes/header.php';
                 <!-- Login Form -->
                 <form id="loginForm" class="auth-form">
                     <h3>Sign In</h3>
-                    <div class="social-login">
-                        <button type="button" class="social-btn"><i class="fab fa-google"></i></button>
-                        <button type="button" class="social-btn"><i class="fab fa-facebook-f"></i></button>
-                        <button type="button" class="social-btn"><i class="fab fa-twitter"></i></button>
-                    </div>
-                    <p class="separator"><span>or use your account</span></p>
+                    <!-- Social Login Removed -->
                     
                     <div class="form-group">
                         <input type="email" placeholder="Email" required>
                     </div>
                     <div class="form-group">
-                        <input type="password" placeholder="Password" required>
+                        <input type="password" placeholder="Password" required id="loginPass">
+                        <i class="fas fa-eye toggle-password" onclick="togglePassword('loginPass', this)"></i>
                     </div>
                     <a href="#" class="forgot-pass">Forgot your password?</a>
                     <button type="submit" class="btn">Sign In</button>
@@ -46,12 +42,7 @@ include '../includes/header.php';
                 <!-- Signup Form -->
                 <form id="signupForm" class="auth-form" style="display: none;">
                     <h3>Create Account</h3>
-                    <div class="social-login">
-                        <button type="button" class="social-btn"><i class="fab fa-google"></i></button>
-                        <button type="button" class="social-btn"><i class="fab fa-facebook-f"></i></button>
-                        <button type="button" class="social-btn"><i class="fab fa-twitter"></i></button>
-                    </div>
-                    <p class="separator"><span>or use your email for registration</span></p>
+                    <!-- Social Login Removed -->
 
                     <div class="form-group">
                         <input type="text" placeholder="Full Name" required>
@@ -60,7 +51,12 @@ include '../includes/header.php';
                         <input type="email" placeholder="Email" required>
                     </div>
                     <div class="form-group">
-                        <input type="password" placeholder="Password" required>
+                        <input type="password" placeholder="Password" required id="signupPass">
+                        <i class="fas fa-eye toggle-password" onclick="togglePassword('signupPass', this)"></i>
+                    </div>
+                    <div class="form-group">
+                        <input type="password" placeholder="Confirm Password" required id="signupConfirmPass">
+                        <i class="fas fa-eye toggle-password" onclick="togglePassword('signupConfirmPass', this)"></i>
                     </div>
                     <button type="submit" class="btn">Sign Up</button>
                 </form>
@@ -105,6 +101,19 @@ include '../includes/header.php';
                 authLeftH2.style.opacity = 1;
                 authLeftP.style.opacity = 1;
             }, 200);
+        }
+
+        function togglePassword(inputId, icon) {
+            const input = document.getElementById(inputId);
+            if (input.type === "password") {
+                input.type = "text";
+                icon.classList.remove("fa-eye");
+                icon.classList.add("fa-eye-slash");
+            } else {
+                input.type = "password";
+                icon.classList.remove("fa-eye-slash");
+                icon.classList.add("fa-eye");
+            }
         }
     </script>
 <?php include '../includes/footer.php'; ?>

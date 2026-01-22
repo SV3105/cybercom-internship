@@ -156,7 +156,49 @@
   font-size: 0.9rem;
 }
 
+
+/* Input Field Styling */
+.form-group {
+  margin-bottom: 1rem;
+  position: relative; /* For icon positioning */
+}
+
+.auth-form input {
+  width: 100%;
+  padding: 12px 15px; /* Added padding as requested */
+  padding-right: 40px; /* Space for the eye icon */
+  border: 1px solid #ddd;
+  border-radius: 8px; /* Simple rounded corners */
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  background: #f9f9f9;
+}
+
+.auth-form input:focus {
+  border-color: var(--primary-color);
+  background: #fff;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+/* Password Toggle Icon */
+.toggle-password {
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: #aaa;
+  transition: color 0.3s;
+  z-index: 10;
+}
+
+.toggle-password:hover {
+  color: var(--primary-color);
+}
+
 /* Auth Responsive */
+
 @media (max-width: 768px) {
   .auth-container {
     flex-direction: column;
