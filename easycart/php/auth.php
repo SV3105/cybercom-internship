@@ -4,6 +4,10 @@ $base_path = "../";
 $page = "auth";
 $extra_css = "auth.css";
 include '../includes/header.php';
+include '../includes/users_data.php';
+
+// Prepare data for JS validation
+$users_json = json_encode($users);
 ?>
 
     <div class="auth-page-wrapper">
@@ -29,7 +33,7 @@ include '../includes/header.php';
                     <!-- Social Login Removed -->
                     
                     <div class="form-group">
-                        <input type="email" placeholder="Email" required>
+                        <input type="email" id="loginEmail" placeholder="Email" required>
                     </div>
                     <div class="form-group">
                         <input type="password" placeholder="Password" required id="loginPass">
@@ -45,17 +49,17 @@ include '../includes/header.php';
                     <!-- Social Login Removed -->
 
                     <div class="form-group">
-                        <input type="text" placeholder="Full Name" required>
+                        <input type="text" id="signupName" name="name" placeholder="Full Name" required>
                     </div>
                     <div class="form-group">
-                        <input type="email" placeholder="Email" required>
+                        <input type="email" id="signupEmail" name="email" placeholder="Email" required>
                     </div>
                     <div class="form-group">
-                        <input type="password" placeholder="Password" required id="signupPass">
+                        <input type="password" id="signupPass" name="password" placeholder="Password" required>
                         <i class="fas fa-eye toggle-password" onclick="togglePassword('signupPass', this)"></i>
                     </div>
                     <div class="form-group">
-                        <input type="password" placeholder="Confirm Password" required id="signupConfirmPass">
+                        <input type="password" id="signupConfirmPass" placeholder="Confirm Password" required>
                         <i class="fas fa-eye toggle-password" onclick="togglePassword('signupConfirmPass', this)"></i>
                     </div>
                     <button type="submit" class="btn">Sign Up</button>
@@ -115,5 +119,99 @@ include '../includes/header.php';
                 icon.classList.add("fa-eye");
             }
         }
+
+        // --- Form Validations ---
+
+        // Get data from PHP
+        const usersData = <?php echo $users_json; ?>;
+
+        function validateEmail(email) {
+            return String(email)
+                .toLowerCase()
+                .match(
+                    /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+                );
+        }
+
+        loginForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const pass = document.getElementById('loginPass').value;
+
+            if (!validateEmail(email)) {
+                alert('Please enter a valid email address.');
+                return;
+            }
+
+            if (pass.length < 6) {
+                alert('Password must be at least 6 characters long.');
+                return;
+            }
+
+            // Check credentials
+            const user = usersData.find(u => u.email.toLowerCase() === email.toLowerCase());
+
+            if (!user) {
+                alert('Email not found. Please sign up first.');
+                return;
+            }
+
+            if (user.password !== pass) {
+                alert('Incorrect password. Please try again.');
+                return;
+            }
+
+            alert('Login successful! Welcome, ' + user.name);
+            window.location.href = '../index.php';
+        });
+
+        signupForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const name = document.getElementById('signupName').value;
+            const email = document.getElementById('signupEmail').value;
+            const pass = document.getElementById('signupPass').value;
+            const confirmPass = document.getElementById('signupConfirmPass').value;
+
+            if (name.trim().length < 2) {
+                alert('Please enter your full name.');
+                return;
+            }
+
+            if (!validateEmail(email)) {
+                alert('Please enter a valid email address.');
+                return;
+            }
+
+            if (pass.length < 6) {
+                alert('Password must be at least 6 characters long.');
+                return;
+            }
+
+            if (pass !== confirmPass) {
+                alert('Passwords do not match.');
+                return;
+            }
+
+            // --- Server Side Signup (Dynamic Data) ---
+            const formData = new FormData(signupForm);
+            
+            fetch('signup_handler.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Signup successful! You can now login.');
+                    location.reload(); // Reload to update the JS usersData array
+                } else {
+                    alert('Signup failed: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred during signup.');
+            });
+        });
     </script>
 <?php include '../includes/footer.php'; ?>

@@ -170,16 +170,16 @@ include '../includes/header.php';
                 <a href="#" class="close-btn">&times;</a>
             </div>
             <div class="modal-body">
-                <form action="#" class="checkout-form">
+                <form action="#" class="checkout-form" id="checkoutForm">
                     <div class="form-section">
                         <h4>Contact Info</h4>
                         <div class="form-group">
                             <label>Full Name</label>
-                            <input type="text" placeholder="John Doe" required>
+                            <input type="text" id="checkoutName" placeholder="John Doe" required>
                         </div>
                         <div class="form-group">
                             <label>Email Address</label>
-                            <input type="email" placeholder="john@example.com" required>
+                            <input type="email" id="checkoutEmail" placeholder="john@example.com" required>
                         </div>
                     </div>
                     
@@ -187,16 +187,16 @@ include '../includes/header.php';
                         <h4>Shipping Address</h4>
                         <div class="form-group">
                             <label>Address</label>
-                            <input type="text" placeholder="123 Street Name" required>
+                            <input type="text" id="checkoutAddress" placeholder="123 Street Name" required>
                         </div>
                         <div class="form-row">
                             <div class="form-group">
                                 <label>City</label>
-                                <input type="text" placeholder="City" required>
+                                <input type="text" id="checkoutCity" placeholder="City" required>
                             </div>
                             <div class="form-group">
                                 <label>Postal Code</label>
-                                <input type="text" placeholder="000000" required>
+                                <input type="text" id="checkoutZip" placeholder="000000" required>
                             </div>
                         </div>
                     </div>
@@ -205,22 +205,85 @@ include '../includes/header.php';
                         <h4>Payment</h4>
                         <div class="form-group">
                             <label>Card Number</label>
-                            <input type="text" placeholder="0000 0000 0000 0000" required>
+                            <input type="text" id="checkoutCard" placeholder="0000 0000 0000 0000" required>
                         </div>
                         <div class="form-row">
                             <div class="form-group">
                                 <label>Expiry</label>
-                                <input type="text" placeholder="MM/YY" required>
+                                <input type="text" id="checkoutExpiry" placeholder="MM/YY" required>
                             </div>
                             <div class="form-group">
                                 <label>CVV</label>
-                                <input type="text" placeholder="123" required>
+                                <input type="text" id="checkoutCVV" placeholder="123" required>
                             </div>
                         </div>
                     </div>
 
                     <button type="submit" class="btn btn-block">Place Order (Rs. <?php echo number_format($total, 2); ?>)</button>
                 </form>
+    <script>
+        const checkoutForm = document.getElementById('checkoutForm');
+
+        if (checkoutForm) {
+            checkoutForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                const name = document.getElementById('checkoutName').value.trim();
+                const email = document.getElementById('checkoutEmail').value.trim();
+                const address = document.getElementById('checkoutAddress').value.trim();
+                const city = document.getElementById('checkoutCity').value.trim();
+                const zip = document.getElementById('checkoutZip').value.trim();
+                const card = document.getElementById('checkoutCard').value.replace(/\s/g, '');
+                const expiry = document.getElementById('checkoutExpiry').value.trim();
+                const cvv = document.getElementById('checkoutCVV').value.trim();
+
+                // Validation rules
+                if (name.length < 2) {
+                    alert('Please enter your full name.');
+                    return;
+                }
+
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(email)) {
+                    alert('Please enter a valid email address.');
+                    return;
+                }
+
+                if (address.length < 5) {
+                    alert('Please enter a valid shipping address.');
+                    return;
+                }
+
+                if (city.length < 2) {
+                    alert('Please enter your city.');
+                    return;
+                }
+
+                if (!/^\d{6}$/.test(zip)) {
+                    alert('Postal code must be 6 digits.');
+                    return;
+                }
+
+                if (!/^\d{16}$/.test(card)) {
+                    alert('Card number must be 16 digits.');
+                    return;
+                }
+
+                if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(expiry)) {
+                    alert('Expiry must be in MM/YY format.');
+                    return;
+                }
+
+                if (!/^\d{3}$/.test(cvv)) {
+                    alert('CVV must be 3 digits.');
+                    return;
+                }
+
+                alert('Order placed successfully! Redirecting to orders...');
+                window.location.href = 'orders.php';
+            });
+        }
+    </script>
             </div>
         </div>
     </div>
