@@ -42,6 +42,7 @@ body {
   min-height: 100vh;
   scroll-behavior: smooth;
   overflow-x: hidden;
+  padding-top: var(--header-height);
 }
 
 h1,
@@ -152,8 +153,10 @@ header {
   background: rgba(255, 255, 255, 0.7); /* More transparent */
   backdrop-filter: blur(20px); /* Stronger blur */
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); /* Softer shadow */
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
+  width: 100%;
   z-index: 1000;
   height: var(--header-height);
   display: flex;
@@ -1029,3 +1032,4 @@ footer p {
 .text-dark { color: var(--text-dark); }
 .mb-4 { margin-bottom: 1.5rem; }
 .w-100 { width: 100%; }
+
