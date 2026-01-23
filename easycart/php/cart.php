@@ -21,12 +21,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     if ($_POST['action'] === 'update_qty') {
         $change = (int)$_POST['change']; // +1 or -1
         
-        // Initialize if not exists (for 'Add to Cart' from details page)
-        if (!isset($_SESSION['cart'][$p_id])) {
-            $_SESSION['cart'][$p_id] = 0;
+        // Check if qty or change is sent
+        if (isset($_POST['qty'])) {
+            $_SESSION['cart'][$p_id] = (int)$_POST['qty'];
+        } else {
+            if (!isset($_SESSION['cart'][$p_id])) {
+                $_SESSION['cart'][$p_id] = 0;
+            }
+            $_SESSION['cart'][$p_id] += $change;
         }
-        
-        $_SESSION['cart'][$p_id] += $change;
         
         if ($_SESSION['cart'][$p_id] <= 0) {
             unset($_SESSION['cart'][$p_id]);
@@ -36,8 +39,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             unset($_SESSION['cart'][$p_id]);
         }
     }
+
+    // Check for AJAX/Fetch request
+    if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
+        echo json_encode(['success' => true]);
+        exit;
+    }
     
-    // Redirect to avoid form resubmission
+    // Redirect for standard form submissions
     header("Location: cart.php");
     exit;
 }
@@ -73,7 +82,7 @@ include '../includes/header.php';
                             $item_total = $price_val * $qty;
                             $subtotal += $item_total;
                 ?>
-                <div class="cart-item">
+                <div class="cart-item" data-id="<?php echo $p_id; ?>" data-price="<?php echo $price_val; ?>">
                     <div class="item-visual">
                         <img src="../images/<?php echo $item['image']; ?>" alt="<?php echo $item['title']; ?>" class="item-img">
                     </div>
@@ -84,32 +93,13 @@ include '../includes/header.php';
                     </div>
                     <div class="item-actions">
                         <div class="quantity-control">
-                            <!-- Decrease Form -->
-                            <form method="POST" style="display:inline;">
-                                <input type="hidden" name="action" value="update_qty">
-                                <input type="hidden" name="change" value="-1">
-                                <input type="hidden" name="product_id" value="<?php echo $p_id; ?>">
-                                <button type="submit" class="qty-btn" aria-label="Decrease quantity"><i class="fas fa-minus"></i></button>
-                            </form>
-                            
-                            <input type="number" value="<?php echo $qty; ?>" min="1" readonly>
-                            
-                            <!-- Increase Form -->
-                            <form method="POST" style="display:inline;">
-                                <input type="hidden" name="action" value="update_qty">
-                                <input type="hidden" name="change" value="1">
-                                <input type="hidden" name="product_id" value="<?php echo $p_id; ?>">
-                                <button type="submit" class="qty-btn" aria-label="Increase quantity"><i class="fas fa-plus"></i></button>
-                            </form>
+                            <button type="button" class="qty-btn" onclick="updateQty(<?php echo $p_id; ?>, -1)"><i class="fas fa-minus"></i></button>
+                            <input type="number" class="qty-input" value="<?php echo $qty; ?>" min="1" readonly>
+                            <button type="button" class="qty-btn" onclick="updateQty(<?php echo $p_id; ?>, 1)"><i class="fas fa-plus"></i></button>
                         </div>
-                        <p class="item-total">₹<?php echo number_format($item_total); ?></p>
+                        <p class="item-total">₹<span class="item-subtotal-val"><?php echo number_format($item_total); ?></span></p>
                         
-                        <!-- Remove Form -->
-                        <form method="POST" style="margin-top: 5px;">
-                             <input type="hidden" name="action" value="remove">
-                             <input type="hidden" name="product_id" value="<?php echo $p_id; ?>">
-                             <button type="submit" class="btn-text text-danger" style="font-size: 0.8rem; background:none; border:none; color: #ef4444; cursor:pointer;">Remove</button>
-                        </form>
+                        <button type="button" class="btn-text text-danger" onclick="removeCartItem(<?php echo $p_id; ?>)" style="font-size: 0.8rem; background:none; border:none; color: #ef4444; cursor:pointer;">Remove</button>
                     </div>
                 </div>
                 <?php endif; endforeach; 
@@ -139,25 +129,25 @@ include '../includes/header.php';
                 <h3>Order Summary</h3>
                 <div class="summary-item">
                     <span>Subtotal</span>
-                    <span>₹<?php echo number_format($subtotal); ?></span>
+                    <span id="summary-subtotal">₹<?php echo number_format($subtotal); ?></span>
                 </div>
                 <div class="summary-item">
                     <span>Shipping</span>
-                    <span><?php echo $shipping == 0 ? 'Free' : '₹'.number_format($shipping); ?></span>
+                    <span id="summary-shipping"><?php echo $shipping == 0 ? 'Free' : '₹'.number_format($shipping); ?></span>
                 </div>
                 <div class="summary-item">
                     <span>Tax (18%)</span>
-                    <span>₹<?php echo number_format($tax); ?></span>
+                    <span id="summary-tax">₹<?php echo number_format($tax); ?></span>
                 </div>
                 <hr>
                 <div class="summary-total">
                     <span>Total</span>
-                    <span>₹<?php echo number_format($total); ?></span>
+                    <span id="summary-total">₹<?php echo number_format($total); ?></span>
                 </div>
                 
                 <a href="#checkout-modal" class="checkout-btn" style="text-align: center; text-decoration: none;">Proceed to Checkout</a>
             </div>
-            <?php endif; ?>
+<?php endif; ?>
         </div>
     </div>
 
@@ -222,6 +212,96 @@ include '../includes/header.php';
                     <button type="submit" class="btn btn-block">Place Order (Rs. <?php echo number_format($total, 2); ?>)</button>
                 </form>
     <script>
+        // --- Cart Interactions ---
+        function updateQty(productId, change) {
+            const itemRow = document.querySelector(`.cart-item[data-id="${productId}"]`);
+            if (!itemRow) return;
+
+            const qtyInput = itemRow.querySelector('.qty-input');
+            const price = parseFloat(itemRow.dataset.price);
+            let currentQty = parseInt(qtyInput.value);
+            
+            let newQty = currentQty + change;
+            if (newQty < 1) return;
+
+            // Sync with session
+            const formData = new FormData();
+            formData.append('action', 'update_qty');
+            formData.append('product_id', productId);
+            formData.append('qty', newQty);
+
+            fetch('cart.php', {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    qtyInput.value = newQty;
+                    // Update item subtotal in UI
+                    const subtotalSpan = itemRow.querySelector('.item-subtotal-val');
+                    const newSubtotal = price * newQty;
+                    subtotalSpan.textContent = new Intl.NumberFormat('en-IN').format(Math.round(newSubtotal));
+                    updateSummary();
+                }
+            });
+        }
+
+        function removeCartItem(productId) {
+            if (!confirm('Are you sure you want to remove this item?')) return;
+            const itemRow = document.querySelector(`.cart-item[data-id="${productId}"]`);
+            if (!itemRow) return;
+
+            // Sync with session
+            const formData = new FormData();
+            formData.append('action', 'remove');
+            formData.append('product_id', productId);
+
+            fetch('cart.php', {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    itemRow.classList.add('removing');
+                    setTimeout(() => {
+                        itemRow.remove();
+                        updateSummary();
+                        
+                        // If cart is empty now
+                        const remainingItems = document.querySelectorAll('.cart-item');
+                        if (remainingItems.length === 0) {
+                            location.reload(); 
+                        }
+                    }, 400); // Wait for CSS transition
+                }
+            });
+        }
+
+        function updateSummary() {
+            let subtotal = 0;
+            const items = document.querySelectorAll('.cart-item');
+            
+            items.forEach(item => {
+                const price = parseFloat(item.dataset.price);
+                const qty = parseInt(item.querySelector('.qty-input').value);
+                subtotal += price * qty;
+            });
+
+            const shipping = 0;
+            const tax = subtotal * 0.18;
+            const total = subtotal + tax + shipping;
+
+            // Update Summary UI
+            document.getElementById('summary-subtotal').textContent = '₹' + new Intl.NumberFormat('en-IN').format(Math.round(subtotal));
+            document.getElementById('summary-tax').textContent = '₹' + new Intl.NumberFormat('en-IN').format(Math.round(tax));
+            document.getElementById('summary-total').textContent = '₹' + new Intl.NumberFormat('en-IN').format(Math.round(total));
+        }
+
+        // --- Checkout Validation ---
         const checkoutForm = document.getElementById('checkoutForm');
 
         if (checkoutForm) {

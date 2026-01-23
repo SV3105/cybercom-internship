@@ -39,7 +39,6 @@ $users_json = json_encode($users);
                         <input type="password" placeholder="Password" required id="loginPass">
                         <i class="fas fa-eye toggle-password" onclick="togglePassword('loginPass', this)"></i>
                     </div>
-                    <a href="#" class="forgot-pass">Forgot your password?</a>
                     <button type="submit" class="btn">Sign In</button>
                 </form>
 
