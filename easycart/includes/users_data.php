@@ -28,5 +28,12 @@ $users = array (
     'email' => 'snehavaghela@gmail.com',
     'password' => '56235623',
   ),
+  4 => 
+  array (
+    'id' => 5,
+    'name' => 'sneha',
+    'email' => 'sneha@gmail.com',
+    'password' => '123456',
+  ),
 );
 ?>

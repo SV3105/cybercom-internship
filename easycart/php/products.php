@@ -21,10 +21,54 @@ $filtered_products = array_filter($products, function($product) use ($selected_c
     // Check Search
     $search_match = true;
     if ($search_query !== '') {
-        $search_match = stripos($product['title'], $search_query) !== false || 
-                       stripos($product['category'], $search_query) !== false || 
-                       stripos($product['brand'], $search_query) !== false;
+        $search_words = explode(' ', strtolower($search_query));
+
+        
+        // Load category synonyms for matching (generalized names only)
+        $cat_labels = [
+            'electronics' => 'Tech Electronics Technology Gadgets',
+            'fashion' => 'Fashion Clothing Apparel Wear',
+            'home' => 'Home Travel Luggage Living',
+            'beauty' => 'Beauty Personal Care Health'
+        ];
+        
+        foreach ($search_words as $word) {
+            $word = trim($word);
+            if ($word === '') continue;
+            
+            $word_found = false;
+            
+            // 1. Check in Title
+            if (stripos($product['title'], $word) !== false) $word_found = true;
+            // 2. Check in Brand
+            elseif (stripos($product['brand'], $word) !== false) $word_found = true;
+            // 3. Check in Category Slug OR Display Label
+            elseif (stripos($product['category'], $word) !== false) $word_found = true;
+            elseif (isset($cat_labels[$product['category']]) && stripos($cat_labels[$product['category']], $word) !== false) $word_found = true;
+            // 4. Check in Description
+            elseif (isset($product['description']) && stripos($product['description'], $word) !== false) $word_found = true;
+            // 5. Check in Image Filename (removes .png/.jpg etc)
+            elseif (stripos($product['image'], $word) !== false) $word_found = true;
+            // 6. Check in Features
+            elseif (isset($product['features']) && is_array($product['features'])) {
+                foreach ($product['features'] as $feature) {
+                    if (stripos($feature, $word) !== false) {
+                        $word_found = true;
+                        break;
+                    }
+                }
+            }
+            
+            // If THIS word was not found in ANY field, then the product is not a match
+            if (!$word_found) {
+                $search_match = false;
+                break;
+            }
+        }
     }
+
+
+
     
     return $cat_match && $brand_match && $search_match;
 });
@@ -67,6 +111,9 @@ include '../includes/header.php';
                 <!-- Filters -->
                 <aside class="filter-sidebar">
                     <form action="" method="GET" id="filterForm">
+                        <!-- Preserve Search Query -->
+                        <input type="hidden" name="search" value="<?php echo htmlspecialchars($search_query); ?>">
+
                         <div class="filter-group">
                             <h3>Categories</h3>
                             <?php 
@@ -114,38 +161,6 @@ include '../includes/header.php';
         </div>
     </div>
     
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const form = document.getElementById('filterForm');
-            const checkboxes = form.querySelectorAll('input[type="checkbox"]');
-            const grid = document.getElementById('productGrid');
-            
-            checkboxes.forEach(cb => {
-                cb.addEventListener('change', function() {
-                    // Create URL from form data
-                    const formData = new FormData(form);
-                    const params = new URLSearchParams(formData);
-                    
-                    // Update Browser URL (History API)
-                    const newUrl = window.location.pathname + '?' + params.toString();
-                    window.history.pushState({}, '', newUrl);
-                    
-                    // Add AJAX flag for the fetch request
-                    params.append('ajax', '1');
-                    
-                    // Fetch filtered results
-                    fetch('products.php?' + params.toString())
-                        .then(response => response.text())
-                        .then(html => {
-                            grid.innerHTML = html;
-                            // Update count 
-                            const count = grid.querySelectorAll('.product-card').length;
-                            document.getElementById('productCount').textContent = count;
-                            document.getElementById('headerCount').textContent = `(${count})`;
-                        })
-                        .catch(error => console.error('Error:', error));
-                });
-            });
-        });
-    </script>
+    <script src="../js/products.js"></script>
+
 <?php include '../includes/footer.php'; ?>
