@@ -12,29 +12,26 @@ include '../includes/products_data.php';
 if (!isset($_SESSION['cart'])) {
     $_SESSION['cart'] = [];
 }
-// Removed hardcoded demo data so cart stays empty when items are removed.
 
 // 2. Handle Actions (Update Quantity / Remove)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
-    $p_id = (int)$_POST['product_id'];
+    $p_id = isset($_POST['product_id']) ? (int)$_POST['product_id'] : 0;
     
-    if ($_POST['action'] === 'update_qty') {
-        $change = (int)$_POST['change']; // +1 or -1
-        
-        // Check if qty or change is sent
+    if ($_POST['action'] === 'update_qty' && $p_id > 0) {
         if (isset($_POST['qty'])) {
             $_SESSION['cart'][$p_id] = (int)$_POST['qty'];
-        } else {
+        } elseif (isset($_POST['change'])) {
+            $change = (int)$_POST['change'];
             if (!isset($_SESSION['cart'][$p_id])) {
                 $_SESSION['cart'][$p_id] = 0;
             }
             $_SESSION['cart'][$p_id] += $change;
         }
         
-        if ($_SESSION['cart'][$p_id] <= 0) {
+        if (isset($_SESSION['cart'][$p_id]) && $_SESSION['cart'][$p_id] <= 0) {
             unset($_SESSION['cart'][$p_id]);
         }
-    } elseif ($_POST['action'] === 'remove') {
+    } elseif ($_POST['action'] === 'remove' && $p_id > 0) {
         if (isset($_SESSION['cart'][$p_id])) {
             unset($_SESSION['cart'][$p_id]);
         }
@@ -42,6 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
     // Check for AJAX/Fetch request
     if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
+        header('Content-Type: application/json');
         echo json_encode(['success' => true]);
         exit;
     }
@@ -62,7 +60,7 @@ include '../includes/header.php';
             <div class="cart-items">
                 <?php
                 $subtotal = 0;
-                $shipping = 0; // Free shipping
+                $shipping = 0; 
                 $cart_empty = true;
 
                 if (!empty($_SESSION['cart'])) {
@@ -117,7 +115,8 @@ include '../includes/header.php';
                         <i class="fas fa-arrow-left" style="margin-right: 8px;"></i> Add More Items
                     </a>
                 <?php endif; 
-
+                
+                $shipping = ($subtotal > 500 || $subtotal == 0) ? 0 : 50;
                 $tax = $subtotal * 0.18; // 18% Tax
                 $total = $subtotal + $tax + $shipping;
                 ?>
@@ -139,6 +138,39 @@ include '../includes/header.php';
                     <span>Tax (18%)</span>
                     <span id="summary-tax">₹<?php echo number_format($tax); ?></span>
                 </div>
+                
+                <div class="shipping-methods">
+                    <h4>Shipping Method</h4>
+                    <div class="shipping-options">
+                        <label class="shipping-option <?php echo ($subtotal >= 500) ? 'selected' : ''; ?>" id="label-free">
+                            <input type="radio" name="shipping_method" value="0" <?php echo ($subtotal >= 500) ? 'checked' : 'disabled'; ?> onchange="updateSummary()">
+                            <div class="shipping-option-info">
+                                <span class="shipping-option-name">Free Delivery</span>
+                                <span class="shipping-option-desc"><?php echo ($subtotal >= 500) ? 'Eligible for free shipping' : 'Spend ₹' . (500 - $subtotal) . ' more for free shipping'; ?></span>
+                            </div>
+                            <span class="shipping-option-price free-highlight">Free</span>
+                        </label>
+                        
+                        <label class="shipping-option <?php echo ($subtotal < 500) ? 'selected' : ''; ?>" id="label-normal">
+                            <input type="radio" name="shipping_method" value="50" <?php echo ($subtotal < 500) ? 'checked' : ''; ?> onchange="updateSummary()">
+                            <div class="shipping-option-info">
+                                <span class="shipping-option-name">Normal Delivery</span>
+                                <span class="shipping-option-desc">3-5 business days</span>
+                            </div>
+                            <span class="shipping-option-price">₹50</span>
+                        </label>
+                        
+                        <label class="shipping-option" id="label-fast">
+                            <input type="radio" name="shipping_method" value="150" onchange="updateSummary()">
+                            <div class="shipping-option-info">
+                                <span class="shipping-option-name">Faster Delivery</span>
+                                <span class="shipping-option-desc">1-2 business days</span>
+                            </div>
+                            <span class="shipping-option-price">₹150</span>
+                        </label>
+                    </div>
+                </div>
+
                 <hr>
                 <div class="summary-total">
                     <span>Total</span>
@@ -147,7 +179,7 @@ include '../includes/header.php';
                 
                 <a href="#checkout-modal" class="checkout-btn" style="text-align: center; text-decoration: none;">Proceed to Checkout</a>
             </div>
-<?php endif; ?>
+            <?php endif; ?>
         </div>
     </div>
 
@@ -173,7 +205,7 @@ include '../includes/header.php';
                         </div>
                     </div>
                     
-                    <div class="form-section">
+                    <div class="form-section address-highlight">
                         <h4>Shipping Address</h4>
                         <div class="form-group">
                             <label>Address</label>
@@ -209,8 +241,12 @@ include '../includes/header.php';
                         </div>
                     </div>
 
-                    <button type="submit" class="btn btn-block">Place Order (Rs. <?php echo number_format($total, 2); ?>)</button>
+                    <button type="submit" class="btn btn-block" id="checkout-btn-text">Place Order (₹<?php echo number_format($total); ?>)</button>
                 </form>
+            </div>
+        </div>
+    </div>
+
     <script>
         // --- Cart Interactions ---
         function updateQty(productId, change) {
@@ -245,7 +281,8 @@ include '../includes/header.php';
                     subtotalSpan.textContent = new Intl.NumberFormat('en-IN').format(Math.round(newSubtotal));
                     updateSummary();
                 }
-            });
+            })
+            .catch(err => console.error('Error updating quantity:', err));
         }
 
         function removeCartItem(productId) {
@@ -278,7 +315,8 @@ include '../includes/header.php';
                         }
                     }, 400); // Wait for CSS transition
                 }
-            });
+            })
+            .catch(err => console.error('Error removing item:', err));
         }
 
         function updateSummary() {
@@ -291,14 +329,60 @@ include '../includes/header.php';
                 subtotal += price * qty;
             });
 
-            const shipping = 0;
+            // Update Shipping Options UI availability
+            const freeOption = document.querySelector('input[name="shipping_method"][value="0"]');
+            const freeLabel = document.getElementById('label-free');
+            const freeDesc = freeLabel.querySelector('.shipping-option-desc');
+            
+            if (subtotal >= 500) {
+                freeOption.disabled = false;
+                freeDesc.textContent = 'Eligible for free shipping';
+                freeLabel.classList.remove('unavailable');
+            } else {
+                if (freeOption.checked) {
+                    document.querySelector('input[name="shipping_method"][value="50"]').checked = true;
+                }
+                freeOption.disabled = true;
+                freeDesc.textContent = 'Spend ₹' + (500 - subtotal) + ' more for free shipping';
+                freeLabel.classList.add('unavailable');
+            }
+
+            // Get selected shipping
+            const selectedShipping = document.querySelector('input[name="shipping_method"]:checked');
+            const shipping = selectedShipping ? parseInt(selectedShipping.value) : 0;
+            
+            // Update selected class on labels
+            document.querySelectorAll('.shipping-option').forEach(label => {
+                label.classList.remove('selected');
+                if (label.querySelector('input').checked) {
+                    label.classList.add('selected');
+                }
+            });
+
             const tax = subtotal * 0.18;
             const total = subtotal + tax + shipping;
 
             // Update Summary UI
             document.getElementById('summary-subtotal').textContent = '₹' + new Intl.NumberFormat('en-IN').format(Math.round(subtotal));
+            
+            const shippingElem = document.getElementById('summary-shipping');
+            shippingElem.textContent = (shipping === 0) ? 'Free' : '₹' + shipping;
+            if (shipping === 0) {
+                shippingElem.style.color = '#166534';
+                shippingElem.style.fontWeight = '700';
+            } else {
+                shippingElem.style.color = 'inherit';
+                shippingElem.style.fontWeight = 'inherit';
+            }
+            
             document.getElementById('summary-tax').textContent = '₹' + new Intl.NumberFormat('en-IN').format(Math.round(tax));
             document.getElementById('summary-total').textContent = '₹' + new Intl.NumberFormat('en-IN').format(Math.round(total));
+            
+            // Update Checkout Button Text
+            const checkoutBtn = document.getElementById('checkout-btn-text');
+            if (checkoutBtn) {
+                checkoutBtn.textContent = 'Place Order (₹' + new Intl.NumberFormat('en-IN').format(Math.round(total)) + ')';
+            }
         }
 
         // --- Checkout Validation ---
@@ -364,8 +448,5 @@ include '../includes/header.php';
             });
         }
     </script>
-            </div>
-        </div>
-    </div>
 
 <?php include '../includes/footer.php'; ?>

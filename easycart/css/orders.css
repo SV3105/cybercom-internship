@@ -96,3 +96,115 @@
     align-self: flex-start;
   }
 }
+
+/* Modal Styling */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    backdrop-filter: blur(4px);
+    overflow-y: auto;
+    animation: fadeIn 0.3s ease;
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 5% auto;
+    padding: 2.5rem;
+    border-radius: 20px;
+    width: 90%;
+    max-width: 800px;
+    position: relative;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+    animation: slideUp 0.4s ease-out;
+}
+
+.close-modal {
+    position: absolute;
+    right: 25px;
+    top: 20px;
+    color: #999;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: color 0.3s;
+}
+
+.close-modal:hover {
+    color: var(--accent-color);
+}
+
+/* Tracking Status Visual */
+.tracking-container {
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin: 2rem 0;
+}
+
+.tracking-steps {
+    display: flex;
+    justify-content: space-between;
+    position: relative;
+}
+
+.tracking-step {
+    text-align: center;
+    flex: 1;
+    z-index: 1;
+}
+
+.step-icon {
+    width: 40px;
+    height: 40px;
+    background: #ddd;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 0.6rem;
+    transition: all 0.3s ease;
+    font-size: 1.1rem;
+}
+
+.step-icon.active {
+    background: var(--accent-color);
+    box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
+}
+
+.step-label {
+    font-size: 0.85rem;
+    color: #999;
+}
+
+.step-label.active {
+    font-weight: 700;
+    color: var(--text-dark);
+}
+
+.items-list {
+    margin-bottom: 2rem;
+}
+
+.item-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #f1f1f1;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideUp {
+    from { transform: translateY(30px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}

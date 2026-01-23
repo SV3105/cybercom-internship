@@ -92,7 +92,11 @@ include '../includes/header.php';
                 </aside>
 
                 <!-- Products Grid -->
-                <div class="products-grid" id="productGrid">
+                <div style="flex: 1;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; padding: 0 0.5rem;">
+                        <span style="color: #666; font-size: 0.95rem;">Showing <strong id="productCount"><?php echo count($filtered_products); ?></strong> products</span>
+                    </div>
+                    <div class="products-grid" id="productGrid">
                     <?php 
                     // Initial Render
                     renderProductsGrid($filtered_products);
@@ -126,6 +130,9 @@ include '../includes/header.php';
                         .then(response => response.text())
                         .then(html => {
                             grid.innerHTML = html;
+                            // Update count (count items in the returned html or just recount visible cards)
+                            const count = grid.querySelectorAll('.product-card').length;
+                            document.getElementById('productCount').textContent = count;
                         })
                         .catch(error => console.error('Error:', error));
                 });
