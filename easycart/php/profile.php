@@ -35,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     }
 
     // Save back to file
-    $content = "<?php\n\$users = " . var_export($users, true) . ";\n?>";
+    $content = "<?php\n\$users = " . var_export($users, true) . ";\n?>"; //var_export = takes users array and converts it into a string 
     file_put_contents('../data/users_data.php', $content);
     
     // Redirect to avoid form resubmission

@@ -287,6 +287,15 @@ nav a:hover::after {
     display: none !important; /* Remove the underline for the icon */
 }
 
+/* Persistent Active Navigation */
+nav a.active-nav {
+    color: var(--primary-color);
+}
+
+nav a.active-nav::after {
+    width: 100%;
+}
+
 /* --- New Split Hero Section --- */
 .hero-split {
   display: flex;
