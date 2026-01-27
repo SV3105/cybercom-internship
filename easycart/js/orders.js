@@ -1,85 +1,34 @@
-function openOrderModal(orderId, ordersData) {
-    const order = ordersData.find(o => o.id == orderId);
-    if (!order) return;
+function buyAgain(productIds) {
+    if (!productIds || productIds.length === 0) return;
 
-    const modalBody = document.getElementById('modalBody');
-    if (!modalBody) return;
+    if (!confirm('Add these items to your cart again?')) return;
 
-    const statusLevels = {
-        'processing': 1,
-        'transit': 2,
-        'delivered': 3
-    };
-    const currentLevel = statusLevels[order.status_code] || 0;
+    let promises = productIds.map(id => {
+        const formData = new FormData();
+        formData.append('action', 'update_qty');
+        formData.append('product_id', id);
+        formData.append('change', 1);
 
-    modalBody.innerHTML = `
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-            <div>
-                <h1 style="font-size: 1.8rem; margin-bottom: 0.5rem;">Order Details</h1>
-                <p style="color: #666;">ID: #${order.id} | Placed on ${order.date}</p>
-            </div>
-            <span class="status-badge status-${order.status_code}">
-                ${order.status}
-            </span>
-        </div>
+        return fetch('cart.php', {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        }).then(res => res.json());
+    });
 
-        <div class="tracking-container">
-            <h3 style="margin-bottom: 1.5rem; font-size: 1.1rem;">Tracking Status</h3>
-            <div class="tracking-steps">
-                <div class="tracking-step">
-                    <div class="step-icon active"><i class="fas fa-check"></i></div>
-                    <p class="step-label active">Ordered</p>
-                </div>
-                <div class="tracking-step">
-                    <div class="step-icon ${currentLevel >= 1 ? 'active' : ''}"><i class="fas fa-box-open"></i></div>
-                    <p class="step-label ${currentLevel >= 1 ? 'active' : ''}">Processed</p>
-                </div>
-                <div class="tracking-step">
-                    <div class="step-icon ${currentLevel >= 2 ? 'active' : ''}"><i class="fas fa-shipping-fast"></i></div>
-                    <p class="step-label ${currentLevel >= 2 ? 'active' : ''}">Shipped</p>
-                </div>
-                <div class="tracking-step">
-                    <div class="step-icon ${currentLevel >= 3 ? 'active' : ''}"><i class="fas fa-home"></i></div>
-                    <p class="step-label ${currentLevel >= 3 ? 'active' : ''}">Delivered</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="items-list">
-            <h3 style="margin-bottom: 1rem; font-size: 1.1rem; border-bottom: 1px solid #eee; padding-bottom: 0.5rem;">Items Ordered</h3>
-            ${order.items.map(item => `
-                <div class="item-row">
-                    <span>${item}</span>
-                    <span style="font-weight: 600;">1 x (Included)</span>
-                </div>
-            `).join('')}
-        </div>
-
-        <div style="text-align: right;">
-            <p style="font-size: 1.2rem; font-weight: 700;">Total Amount: ₹${order.total}</p>
-        </div>
-    `;
-
-    const modal = document.getElementById('orderModal');
-    if (modal) {
-        modal.style.display = 'block';
-        document.body.style.overflow = 'hidden'; 
-    }
+    Promise.all(promises)
+        .then(results => {
+            const allSuccess = results.every(r => r.success);
+            if (allSuccess) {
+                if (confirm('Items added to cart! Go to cart now?')) {
+                    window.location.href = 'cart.php';
+                }
+            } else {
+                alert('Some items could not be added. Please try again.');
+            }
+        })
+        .catch(err => {
+            console.error('Error adding items to cart:', err);
+            alert('An error occurred. Please try again.');
+        });
 }
-
-function closeOrderModal() {
-    const modal = document.getElementById('orderModal');
-    if (modal) {
-        modal.style.display = 'none';
-        document.body.style.overflow = 'auto';
-    }
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-    window.onclick = function(event) {
-        const modal = document.getElementById('orderModal');
-        if (event.target == modal) {
-            closeOrderModal();
-        }
-    }
-});

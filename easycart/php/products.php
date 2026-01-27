@@ -149,7 +149,7 @@ include '../includes/header.php';
                         <div class="filter-group">
                             <h3>Categories</h3>
                             <?php 
-                            $cats = ['electronics' => 'Electronics', 'fashion' => 'Fashion', 'home' => 'Home & Living', 'beauty' => 'Beauty'];
+                            $cats = ['electronics' => 'Electronics', 'fashion' => 'Fashion', 'home' => 'Home & Living', 'beauty' => 'Beauty', 'smartphone' => 'Smartphone'];
                             foreach($cats as $val => $label):
                             ?>
                             <label class="filter-option">
@@ -162,7 +162,7 @@ include '../includes/header.php';
                         <div class="filter-group">
                             <h3>Brands</h3>
                             <?php 
-                            $brands = ['boat' => 'boAt', 'noise' => 'Noise', 'hp' => 'HP', 'hrx' => 'HRX', 'fabindia' => 'Fabindia', 'mamaearth' => 'Mamaearth', 'titan' => 'Titan', 'smartphone' => 'Smartphone', 'vip' => 'VIP'];
+                            $brands = ['boat' => 'boAt', 'noise' => 'Noise', 'hp' => 'HP', 'hrx' => 'HRX', 'fabindia' => 'Fabindia', 'mamaearth' => 'Mamaearth', 'titan' => 'Titan', 'samsung' => 'Samsung', 'vip' => 'VIP'];
                             foreach($brands as $val => $label):
                             ?>
                             <label class="filter-option">

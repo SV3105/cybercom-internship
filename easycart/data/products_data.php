@@ -91,8 +91,8 @@ $products = [
     [
         'id' => 5,
         'title' => 'Samsung Galaxy M34',
-        'category' => 'electronics',
-        'brand' => 'smartphone',
+        'category' => 'smartphone',
+        'brand' => 'samsung',
         'price' => '16,999',
         'old_price' => null,
         'image' => 'smartphone.png',
@@ -233,6 +233,10 @@ $categories = [
     'beauty' => [
         'name' => 'Beauty',
         'image' => 'perfume.png' // Matches Mamaearth
+    ],
+    'smartphone' => [
+        'name' => 'Smartphone',
+        'image' => 'smartphone.png'
     ]
 ];
 
@@ -244,23 +248,23 @@ $orders = [
         'status' => 'Delivered',
         'status_code' => 'delivered',
         'items' => ['boAt Airdopes 141', 'Noise ColorFit Pro'],
-        'total' => '3,298'
+        'total' => '2,830'
     ],
     [
         'id' => '12344',
         'date' => 'January 10, 2026',
         'status' => 'In Transit',
         'status_code' => 'transit',
-        'items' => ['HP Pavilion 15', 'Mechanical Keyboard'],
-        'total' => '55,490'
+        'items' => ['fabindia', 'boAt Rockerz 450'],
+        'total' => '3,656'
     ],
     [
         'id' => '12343',
         'date' => 'January 5, 2026',
         'status' => 'Processing',
         'status_code' => 'processing',
-        'items' => ['USB-C Hub', 'Gaming Mouse'],
-        'total' => '4,500'
+        'items' => ['VIP Trolley', 'Samsung Galaxy M34'],
+        'total' => '24,778'
     ]
 ];
 ?>

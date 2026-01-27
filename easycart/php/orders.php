@@ -17,17 +17,83 @@ include '../includes/header.php';
                     <div class="order-header">
                         <div>
                             <h3>Order #<?php echo $order['id']; ?></h3>
-                            <p>Placed on: <?php echo $order['date']; ?></p>
+                            <p><i class="far fa-calendar-alt"></i> Placed on <?php echo $order['date']; ?></p>
                         </div>
-                        <div>
-                             <span class="status-badge status-<?php echo $order['status_code']; ?>"><?php echo $order['status']; ?></span>
+                        <span class="status-badge status-<?php echo $order['status_code']; ?>">
+                            <i class="fas <?php echo ($order['status_code'] === 'delivered') ? 'fa-check-circle' : (($order['status_code'] === 'transit') ? 'fa-truck' : 'fa-clock'); ?>"></i>
+                            <?php echo $order['status']; ?>
+                        </span>
+                    </div>
+                    
+                    <div class="order-body">
+                        <!-- Order Status Stepper -->
+                        <?php 
+                            $current_status = $order['status_code'];
+                            $steps = [
+                                ['label' => 'Ordered', 'icon' => 'fa-clipboard-check'],
+                                ['label' => 'Packed', 'icon' => 'fa-box'],
+                                ['label' => 'Shipped', 'icon' => 'fa-shipping-fast'],
+                                ['label' => 'Delivered', 'icon' => 'fa-check-circle']
+                            ];
+                            
+                            $progress = 0;
+                            $active_index = 0;
+                            if ($current_status === 'processing') { $progress = 33; $active_index = 1; }
+                            elseif ($current_status === 'transit') { $progress = 66; $active_index = 2; }
+                            elseif ($current_status === 'delivered') { $progress = 100; $active_index = 3; }
+                        ?>
+                        <div class="order-stepper">
+                            <div class="stepper-progress" style="width: <?php echo $progress; ?>%;"></div>
+                            <?php foreach($steps as $index => $step): ?>
+                                <?php 
+                                    $class = '';
+                                    if ($index < $active_index || ($current_status === 'delivered' && $index <= $active_index)) $class = 'completed';
+                                    elseif ($index === $active_index && $current_status !== 'delivered') $class = 'active';
+                                ?>
+                                <div class="stepper-item <?php echo $class; ?>">
+                                    <div class="step-dot">
+                                        <i class="fas <?php echo $step['icon']; ?>"></i>
+                                    </div>
+                                    <span class="step-text"><?php echo $step['label']; ?></span>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+
+                        <div class="order-items-list">
+                            <?php foreach($order['items'] as $item): ?>
+                                <div class="order-item">
+                                    <i class="fas fa-shopping-bag"></i>
+                                    <span class="item-name"><?php echo $item; ?></span>
+                                </div>
+                            <?php endforeach; ?>
                         </div>
                     </div>
-                    <p>Items: <?php echo implode(', ', $order['items']); ?></p>
-                    <p><strong>Total: ₹<?php echo $order['total']; ?></strong></p>
-                    <div style="margin-top: 1rem; border-top: 1px solid #eee; padding-top: 1rem;">
-                        <button onclick="callOpenModal(<?php echo $order['id']; ?>)" class="btn-text" style="color: var(--accent-color); font-weight: 600; background: none; border: none; cursor: pointer; padding: 0;">Track Order <i class="fas fa-arrow-right" style="font-size: 0.8rem;"></i></button>
 
+                    <div class="order-footer">
+                        <div>
+                            <span class="order-total-label">Total Amount:</span>
+                            <span class="order-total-amount">₹<?php echo $order['total']; ?></span>
+                        </div>
+                        <div class="order-actions">
+                            <a href="https://wa.me/918001234567?text=I%20need%20help%20with%20Order%20%23<?php echo $order['id']; ?>" target="_blank" class="btn-order-action btn-order-help" style="text-decoration: none;">
+                                <i class="fab fa-whatsapp"></i> Chat on WhatsApp
+                            </a>
+                            <?php 
+                                // Find product IDs for "Buy Again"
+                                $item_ids = [];
+                                foreach($order['items'] as $item_title) {
+                                    foreach($products as $p) {
+                                        if ($p['title'] === $item_title) {
+                                            $item_ids[] = $p['id'];
+                                            break;
+                                        }
+                                    }
+                                }
+                            ?>
+                            <button class="btn-order-action btn-buy-again" onclick='buyAgain(<?php echo json_encode($item_ids); ?>)'>
+                                <i class="fas fa-redo"></i> Buy Again
+                            </button>
+                        </div>
                     </div>
                 </div>
                 <?php endforeach; ?>
@@ -35,21 +101,5 @@ include '../includes/header.php';
         </div>
     </div>
 
-    <!-- Order Details Modal -->
-    <div id="orderModal" class="modal">
-        <div class="modal-content">
-            <span class="close-modal" onclick="closeOrderModal()">&times;</span>
-            <div id="modalBody">
-                <!-- Data will be injected here -->
-            </div>
-        </div>
-    </div>
-
     <script src="../js/orders.js"></script>
-    <script>
-        const ordersData = <?php echo json_encode($orders); ?>;
-        function callOpenModal(id) { openOrderModal(id, ordersData); }
-
-    </script>
-
 <?php include '../includes/footer.php'; ?>

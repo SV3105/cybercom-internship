@@ -21,6 +21,7 @@
                         <li style="margin-bottom: 0.5rem;"><a href="<?php echo $base_path; ?>php/products.php?category[]=fashion">Fashion</a></li>
                         <li style="margin-bottom: 0.5rem;"><a href="<?php echo $base_path; ?>php/products.php?category[]=home">Home & Living</a></li>
                         <li style="margin-bottom: 0.5rem;"><a href="<?php echo $base_path; ?>php/products.php?category[]=beauty">Beauty & Personal Care</a></li>
+                        <li style="margin-bottom: 0.5rem;"><a href="<?php echo $base_path; ?>php/products.php?category[]=smartphone">Smartphone</a></li>
                     </ul>
                 </div>
                 <div>
