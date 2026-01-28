@@ -91,7 +91,7 @@ $products = [
     [
         'id' => 5,
         'title' => 'Samsung Galaxy M34',
-        'category' => 'smartphone',
+        'category' => 'electronics',
         'brand' => 'samsung',
         'price' => '16,999',
         'old_price' => null,
@@ -233,10 +233,6 @@ $categories = [
     'beauty' => [
         'name' => 'Beauty',
         'image' => 'perfume.png' // Matches Mamaearth
-    ],
-    'smartphone' => [
-        'name' => 'Smartphone',
-        'image' => 'smartphone.png'
     ]
 ];
 

@@ -121,7 +121,18 @@ function updateQuickQty(productId, change, isHome = false) {
     })
     .then(res => res.json())
     .then(data => {
-        if (!data.success) {
+        if (data.success) {
+            // Sync Header Cart Count (Phase 5 Requirement)
+            const cartBadge = document.querySelector('.cart-count-badge');
+            if (cartBadge) {
+                cartBadge.textContent = data.summary.count;
+                cartBadge.style.display = data.summary.count > 0 ? 'flex' : 'none';
+            } else if (data.summary.count > 0) {
+                // If badge doesn't exist yet but we have items, we might need to reload or create it
+                // For now, let's just reload to show the badge if it's the first item
+                location.reload();
+            }
+        } else {
             alert('Failed to update cart. Please try again.');
             location.reload(); 
         }

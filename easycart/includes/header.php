@@ -25,7 +25,17 @@
             <ul>
                 <li><a href="<?php echo $base_path; ?>index.php" class="<?php echo ($page === 'home') ? 'active-nav' : ''; ?>">Home</a></li>
                 <li><a href="<?php echo $base_path; ?>php/products.php" class="<?php echo ($page === 'products') ? 'active-nav' : ''; ?>">Collections</a></li>
-                <li><a href="<?php echo $base_path; ?>php/cart.php" class="<?php echo ($page === 'cart') ? 'active-nav' : ''; ?>">Cart <i class="fas fa-shopping-cart"></i></a></li>
+                <li>
+                    <a href="<?php echo $base_path; ?>php/cart.php" class="<?php echo ($page === 'cart') ? 'active-nav' : ''; ?>">
+                        Cart <i class="fas fa-shopping-cart"></i>
+                        <?php 
+                        $cart_count = isset($_SESSION['cart']) ? array_sum($_SESSION['cart']) : 0;
+                        if ($cart_count > 0): 
+                        ?>
+                        <span class="cart-count-badge"><?php echo $cart_count; ?></span>
+                        <?php endif; ?>
+                    </a>
+                </li>
                 <li><a href="<?php echo $base_path; ?>php/auth.php" class="<?php echo ($page === 'auth') ? 'active-nav' : ''; ?>">Login / Sign Up</a></li>
                 <li><a href="<?php echo $base_path; ?>php/orders.php" class="<?php echo ($page === 'orders') ? 'active-nav' : ''; ?>">Orders</a></li>
                 <li><a href="<?php echo $base_path; ?>php/wishlist.php" class="<?php echo ($page === 'wishlist') ? 'active-nav' : ''; ?>"><i class="far fa-heart"></i> Wishlist</a></li>

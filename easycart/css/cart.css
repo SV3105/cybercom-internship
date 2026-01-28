@@ -24,6 +24,11 @@ body {
     padding-top: 100px; /* Added 100px to clear fixed header */
 }
 
+/* Fix for footer inheriting the above padding */
+footer .container {
+    padding-top: 0 !important;
+}
+
 .page-title {
     font-size: 2rem;
     font-weight: 800;

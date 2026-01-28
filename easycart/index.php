@@ -1,4 +1,5 @@
 <?php 
+session_start();
 $title = "EasyCart India - The Big Sale is Live!";
 $base_path = "./";
 $page = "home";
@@ -6,6 +7,8 @@ include './data/products_data.php';
 
 include './includes/header.php'; 
 ?>
+
+
 
     <!-- New Hero Section: Split Layout -->
     <div class="hero-split">
@@ -153,5 +156,5 @@ include './includes/header.php';
     </div>
 
     <link rel="stylesheet" href="./css/wishlist.css">
-    <script src="./js/products.js"></script>
+    <script src="./js/products.js?v=<?php echo time(); ?>"></script>
 <?php include './includes/footer.php'; ?>

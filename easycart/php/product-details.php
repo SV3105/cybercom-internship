@@ -78,9 +78,9 @@ include '../includes/header.php';
                 <span>(<?php echo $rating; ?> stars)</span>
             </div>
             <p class="price">
-                Rs. <?php echo $current_product['price']; ?>
+                ₹ <?php echo $current_product['price']; ?>
                 <?php if(isset($current_product['old_price']) && $current_product['old_price']): ?>
-                <span style="text-decoration: line-through; color: #999; font-size: 0.8em; margin-left: 10px;">Rs. <?php echo $current_product['old_price']; ?></span>
+                <span style="text-decoration: line-through; color: #999; font-size: 0.8em; margin-left: 10px;">₹ <?php echo $current_product['old_price']; ?></span>
                 <?php endif; ?>
             </p>
             

@@ -29,7 +29,7 @@ function updateQty(productId, change) {
             const subtotalSpan = itemRow.querySelector('.item-subtotal-val');
             const newSubtotal = price * newQty;
             subtotalSpan.textContent = new Intl.NumberFormat('en-IN').format(Math.round(newSubtotal));
-            updateSummary();
+            updateSummary(data.summary);
         }
     })
     .catch(err => console.error('Error updating quantity:', err));
@@ -56,7 +56,7 @@ function removeCartItem(productId) {
             itemRow.classList.add('removing');
             setTimeout(() => {
                 itemRow.remove();
-                updateSummary();
+                updateSummary(data.summary);
                 
                 // If cart is empty now
                 const remainingItems = document.querySelectorAll('.cart-item');
@@ -90,41 +90,52 @@ function clearCart() {
 }
 
 
-function updateSummary() {
-    let subtotal = 0;
-    const items = document.querySelectorAll('.cart-item');
-    
-    items.forEach(item => {
-        const price = parseFloat(item.dataset.price);
-        const qty = parseInt(item.querySelector('.qty-input').value);
-        subtotal += price * qty;
-    });
+function updateShipping(method) {
+    const formData = new FormData();
+    formData.append('action', 'set_shipping');
+    formData.append('method', method);
 
-    // Update Shipping Options UI availability
-    const freeOption = document.querySelector('input[name="shipping_method"][value="0"]');
-    const freeLabel = document.getElementById('label-free');
-    
-    if (freeLabel) {
-        const freeDesc = freeLabel.querySelector('.shipping-option-desc');
-        if (subtotal >= 500) {
-            if (freeOption) freeOption.disabled = false;
-            if (freeDesc) freeDesc.textContent = 'Eligible for free shipping';
-            freeLabel.classList.remove('unavailable');
-        } else {
-            if (freeOption && freeOption.checked) {
-                const normalOption = document.querySelector('input[name="shipping_method"][value="50"]');
-                if (normalOption) normalOption.checked = true;
-            }
-            if (freeOption) freeOption.disabled = true;
-            if (freeDesc) freeDesc.textContent = 'Spend ₹' + (500 - subtotal) + ' more for free shipping';
-            freeLabel.classList.add('unavailable');
+    fetch('cart.php', {
+        method: 'POST',
+        body: formData,
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            updateSummary(data.summary);
         }
+    })
+    .catch(err => console.error('Error updating shipping:', err));
+}
+
+function updateSummary(summaryData = null) {
+    if (!summaryData) {
+        console.error('updateSummary called without data from server');
+        return;
     }
 
-    // Get selected shipping
-    const selectedShipping = document.querySelector('input[name="shipping_method"]:checked');
-    const shipping = selectedShipping ? parseInt(selectedShipping.value) : 0;
-    
+    // Use data directly from server (Messenger Pattern)
+    const subtotal = summaryData.subtotal;
+    const shipping = summaryData.shipping;
+    const tax = summaryData.tax;
+    const total = summaryData.total;
+    const cartCount = summaryData.count;
+    const shippingOptions = summaryData.shipping_options;
+
+    // Update Shipping Option Labels (Solve the Mismatch)
+    if (shippingOptions) {
+        Object.keys(shippingOptions).forEach(method => {
+            const label = document.querySelector(`input[value="${method}"]`).closest('.shipping-option');
+            if (label) {
+                const priceSpan = label.querySelector('.shipping-option-price');
+                if (priceSpan) {
+                    priceSpan.textContent = '₹' + new Intl.NumberFormat('en-IN').format(Math.round(shippingOptions[method]));
+                }
+            }
+        });
+    }
+
     // Update selected class on labels
     document.querySelectorAll('.shipping-option').forEach(label => {
         label.classList.remove('selected');
@@ -134,24 +145,12 @@ function updateSummary() {
         }
     });
 
-    const tax = subtotal * 0.18;
-    const total = subtotal + tax + shipping;
-
     // Update Summary UI
     const subtotalElem = document.getElementById('summary-subtotal');
     if (subtotalElem) subtotalElem.textContent = '₹' + new Intl.NumberFormat('en-IN').format(Math.round(subtotal));
     
     const shippingElem = document.getElementById('summary-shipping');
-    if (shippingElem) {
-        shippingElem.textContent = (shipping === 0) ? 'Free' : '₹' + shipping;
-        if (shipping === 0) {
-            shippingElem.style.color = '#166534';
-            shippingElem.style.fontWeight = '700';
-        } else {
-            shippingElem.style.color = 'inherit';
-            shippingElem.style.fontWeight = 'inherit';
-        }
-    }
+    if (shippingElem) shippingElem.textContent = '₹' + new Intl.NumberFormat('en-IN').format(Math.round(shipping));
     
     const taxElem = document.getElementById('summary-tax');
     if (taxElem) taxElem.textContent = '₹' + new Intl.NumberFormat('en-IN').format(Math.round(tax));
@@ -163,6 +162,12 @@ function updateSummary() {
     const checkoutBtn = document.getElementById('checkout-btn-text');
     if (checkoutBtn) {
         checkoutBtn.textContent = 'Place Order (₹' + new Intl.NumberFormat('en-IN').format(Math.round(total)) + ')';
+    }
+
+    // Sync Header Cart Count (Phase 5 Bonus)
+    const cartBadge = document.querySelector('.cart-count-badge');
+    if (cartBadge) {
+        cartBadge.textContent = cartCount;
     }
 }
 

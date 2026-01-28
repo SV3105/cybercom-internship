@@ -14,6 +14,58 @@ if (!isset($_SESSION['cart'])) {
     $_SESSION['cart'] = [];
 }
 
+/**
+ * Centralized Cart Calculation Logic
+ * Calculates Subtotal, Shipping, Tax, and Total based on current cart state.
+ */
+function calculateCartTotals($cart_items, $products_data) {
+    $subtotal = 0;
+    
+    // Calculate Subtotal
+    foreach($cart_items as $p_id => $qty) {
+        foreach($products_data as $p) {
+            if($p['id'] == $p_id) {
+                // Remove commas from price string (e.g. "1,200" -> 1200)
+                $price_val = (float)str_replace(',', '', $p['price']);
+                $subtotal += $price_val * $qty;
+                break;
+            }
+        }
+    }
+
+    // Shipping Rules
+    $shipping_options = [
+        'standard' => 40,
+        'express' => min(80, $subtotal * 0.10),
+        'white_glove' => min(150, $subtotal * 0.05),
+        'freight' => max(200, $subtotal * 0.03)
+    ];
+
+    // Determine Selected Shipping Cost
+    $selected_method = isset($_SESSION['shipping_method']) ? $_SESSION['shipping_method'] : 'standard';
+    // Default to standard if method invalid, but logic below handles it via array lookup or fallback
+    $shipping_cost = isset($shipping_options[$selected_method]) ? $shipping_options[$selected_method] : 40;
+    
+    // Empty cart checks
+    if (empty($cart_items)) {
+        $shipping_cost = 0;
+        $shipping_options = array_map(function() { return 0; }, $shipping_options);
+    }
+
+    // Tax (18%)
+    $tax = ($subtotal + $shipping_cost) * 0.18;
+    $total = $subtotal + $shipping_cost + $tax;
+
+    return [
+        'subtotal' => $subtotal,
+        'shipping_cost' => $shipping_cost,
+        'tax' => $tax,
+        'total' => $total,
+        'shipping_options' => $shipping_options,
+        'item_count' => array_sum($cart_items)
+    ];
+}
+
 // 2. Handle Actions (Update Quantity / Remove)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     $p_id = isset($_POST['product_id']) ? (int)$_POST['product_id'] : 0;
@@ -36,15 +88,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         if (isset($_SESSION['cart'][$p_id])) {
             unset($_SESSION['cart'][$p_id]);
         }
+    } elseif ($_POST['action'] === 'set_shipping' && isset($_POST['method'])) {
+        $_SESSION['shipping_method'] = $_POST['method'];
     } elseif ($_POST['action'] === 'clear') {
         $_SESSION['cart'] = [];
     }
 
 
+
+    /*
+     * WHY WE USE AJAX VS PAGE RELOAD?
+     * -------------------------------------------------------------------------
+     * Feature      | Without AJAX (Old School)         | With AJAX (Modern)
+     * -------------------------------------------------------------------------
+     * Visuals      | Screen flashes white on update    | Smooth, instant updates
+     * Speed        | Slow (re-downloads CSS/Images)    | Fast (only sends JSON)
+     * Scroll       | Jumps to top after every click    | Stays exactly where you are
+     * -------------------------------------------------------------------------
+     * 
+     * HOW IT WORKS:
+     * 1. Page Load: PHP renders full HTML with initial values.
+     * 2. User Action: JS sends hidden background request (AJAX).
+     * 3. PHP: Detects this flag, calculates new totals, and sends ONLY JSON.
+     * 4. JS: Receives JSON and updates specific numbers in the DOM.
+     */
+
     // Check for AJAX/Fetch request
     if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
+        
+        // Use the centralized function
+        $totals = calculateCartTotals($_SESSION['cart'], $products);
+
         header('Content-Type: application/json');
-        echo json_encode(['success' => true]);
+        echo json_encode([
+            'success' => true,
+            'summary' => [
+                'subtotal' => $totals['subtotal'],
+                'shipping' => $totals['shipping_cost'], // JS expects 'shipping'
+                'tax' => $totals['tax'],
+                'total' => $totals['total'],
+                'count' => $totals['item_count'],
+                'shipping_options' => $totals['shipping_options']
+            ]
+        ]);
         exit;
     }
     
@@ -130,9 +216,19 @@ include '../includes/header.php';
                     </a>
                 <?php endif; 
                 
-                $shipping = ($subtotal > 500 || $subtotal == 0) ? 0 : 50;
-                $tax = $subtotal * 0.18; // 18% Tax
-                $total = $subtotal + $tax + $shipping;
+
+                
+                // --- Phase 4: Shipping & Tax Logic (Rupee Edition) ---
+                // REFACTORED: Now using the centralized function
+                $cart_totals = calculateCartTotals($_SESSION['cart'], $products);
+                
+                // Extract variables for use in HTML below
+                $subtotal = $cart_totals['subtotal']; // Note: This overwrites the loop subtotal, which is safer
+                $shipping_cost = $cart_totals['shipping_cost'];
+                $tax = $cart_totals['tax'];
+                $total = $cart_totals['total'];
+                $shipping_options = $cart_totals['shipping_options'];
+                $shipping_method = isset($_SESSION['shipping_method']) ? $_SESSION['shipping_method'] : 'standard';
                 ?>
             </div>
             
@@ -146,7 +242,7 @@ include '../includes/header.php';
                 </div>
                 <div class="summary-item">
                     <span>Shipping</span>
-                    <span id="summary-shipping"><?php echo $shipping == 0 ? 'Free' : '₹'.number_format($shipping); ?></span>
+                    <span id="summary-shipping">₹<?php echo number_format($shipping_cost); ?></span>
                 </div>
                 <div class="summary-item">
                     <span>Tax (18%)</span>
@@ -156,31 +252,44 @@ include '../includes/header.php';
                 <div class="shipping-methods">
                     <h4>Shipping Method</h4>
                     <div class="shipping-options">
-                        <label class="shipping-option <?php echo ($subtotal >= 500) ? 'selected' : ''; ?>" id="label-free">
-                            <input type="radio" name="shipping_method" value="0" <?php echo ($subtotal >= 500) ? 'checked' : 'disabled'; ?> onchange="updateSummary()">
+                        <!-- Standard Shipping -->
+                        <label class="shipping-option <?php echo ($shipping_method === 'standard') ? 'selected' : ''; ?>">
+                            <input type="radio" name="shipping_method" value="standard" <?php echo ($shipping_method === 'standard') ? 'checked' : ''; ?> onchange="updateShipping('standard')">
                             <div class="shipping-option-info">
-                                <span class="shipping-option-name">Free Delivery</span>
-                                <span class="shipping-option-desc"><?php echo ($subtotal >= 500) ? 'Eligible for free shipping' : 'Spend ₹' . (500 - $subtotal) . ' more for free shipping'; ?></span>
+                                <span class="shipping-option-name">Standard Shipping</span>
+                                <span class="shipping-option-desc">Flat Rate Delivery</span>
                             </div>
-                            <span class="shipping-option-price free-highlight">Free</span>
+                            <span class="shipping-option-price">₹40</span>
                         </label>
                         
-                        <label class="shipping-option <?php echo ($subtotal < 500) ? 'selected' : ''; ?>" id="label-normal">
-                            <input type="radio" name="shipping_method" value="50" <?php echo ($subtotal < 500) ? 'checked' : ''; ?> onchange="updateSummary()">
+                        <!-- Express Shipping -->
+                        <label class="shipping-option <?php echo ($shipping_method === 'express') ? 'selected' : ''; ?>">
+                            <input type="radio" name="shipping_method" value="express" <?php echo ($shipping_method === 'express') ? 'checked' : ''; ?> onchange="updateShipping('express')">
                             <div class="shipping-option-info">
-                                <span class="shipping-option-name">Normal Delivery</span>
-                                <span class="shipping-option-desc">3-5 business days</span>
+                                <span class="shipping-option-name">Express Shipping</span>
+                                <span class="shipping-option-desc">₹80 or 10% (Lowest)</span>
                             </div>
-                            <span class="shipping-option-price">₹50</span>
+                            <span class="shipping-option-price">₹<?php echo number_format($shipping_options['express']); ?></span>
                         </label>
                         
-                        <label class="shipping-option" id="label-fast">
-                            <input type="radio" name="shipping_method" value="150" onchange="updateSummary()">
+                        <!-- White Glove Delivery -->
+                        <label class="shipping-option <?php echo ($shipping_method === 'white_glove') ? 'selected' : ''; ?>">
+                            <input type="radio" name="shipping_method" value="white_glove" <?php echo ($shipping_method === 'white_glove') ? 'checked' : ''; ?> onchange="updateShipping('white_glove')">
                             <div class="shipping-option-info">
-                                <span class="shipping-option-name">Faster Delivery</span>
-                                <span class="shipping-option-desc">1-2 business days</span>
+                                <span class="shipping-option-name">White Glove Delivery</span>
+                                <span class="shipping-option-desc">₹150 or 5% (Lowest)</span>
                             </div>
-                            <span class="shipping-option-price">₹150</span>
+                            <span class="shipping-option-price">₹<?php echo number_format($shipping_options['white_glove']); ?></span>
+                        </label>
+
+                        <!-- Freight Shipping -->
+                        <label class="shipping-option <?php echo ($shipping_method === 'freight') ? 'selected' : ''; ?>">
+                            <input type="radio" name="shipping_method" value="freight" <?php echo ($shipping_method === 'freight') ? 'checked' : ''; ?> onchange="updateShipping('freight')">
+                            <div class="shipping-option-info">
+                                <span class="shipping-option-name">Freight Shipping</span>
+                                <span class="shipping-option-desc">3% or Min ₹200</span>
+                            </div>
+                            <span class="shipping-option-price">₹<?php echo number_format($shipping_options['freight']); ?></span>
                         </label>
                     </div>
                 </div>

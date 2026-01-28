@@ -7,7 +7,6 @@ $page = "products";
 $extra_css = "products.css";
 include '../data/products_data.php';
 
-
 // --- SERVER SIDE LOGIC ---
 
 // 1. Capture Filter Inputs
@@ -133,6 +132,8 @@ if(isset($_GET['ajax']) && $_GET['ajax'] == '1') {
 // --- NORMAL PAGE LOAD ---
 include '../includes/header.php';
 ?>
+
+
 <link rel="stylesheet" href="../css/wishlist.css">
 
     <div class="container">
@@ -149,7 +150,7 @@ include '../includes/header.php';
                         <div class="filter-group">
                             <h3>Categories</h3>
                             <?php 
-                            $cats = ['electronics' => 'Electronics', 'fashion' => 'Fashion', 'home' => 'Home & Living', 'beauty' => 'Beauty', 'smartphone' => 'Smartphone'];
+                            $cats = ['electronics' => 'Electronics', 'fashion' => 'Fashion', 'home' => 'Home & Living', 'beauty' => 'Beauty'];
                             foreach($cats as $val => $label):
                             ?>
                             <label class="filter-option">
@@ -192,7 +193,8 @@ include '../includes/header.php';
             </div>
         </div>
     </div>
+    </div>
     
-    <script src="../js/products.js"></script>
+    <script src="../js/products.js?v=<?php echo time(); ?>"></script>
 
 <?php include '../includes/footer.php'; ?>
