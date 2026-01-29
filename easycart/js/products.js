@@ -103,6 +103,11 @@ function updateQuickQty(productId, change, isHome = false) {
     
     if (newQty < 0) newQty = 0;
 
+    if (newQty > 5) {
+        alert("Sorry only 5 products on each order");
+        return;
+    }
+
     // Use correct path based on page
     const ajaxPath = isHome ? 'php/cart.php' : 'cart.php';
 

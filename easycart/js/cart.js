@@ -10,6 +10,13 @@ function updateQty(productId, change) {
     let newQty = currentQty + change;
     if (newQty < 1) return;
 
+    if (newQty > 5) {
+        alert("Sorry only 5 products on each order");
+        // Reset input to current valid qty
+        qtyInput.value = currentQty; 
+        return;
+    }
+
     // Sync with session
     const formData = new FormData();
     formData.append('action', 'update_qty');
@@ -104,9 +111,24 @@ function updateShipping(method) {
     .then(data => {
         if (data.success) {
             updateSummary(data.summary);
+            // Auto close after selection (optional, but requested to save space)
+            toggleShipping(); 
         }
     })
     .catch(err => console.error('Error updating shipping:', err));
+}
+
+function toggleShipping() {
+    const container = document.getElementById('shipping-options-container');
+    const chevron = document.getElementById('shipping-chevron');
+    
+    if (container.style.display === 'none') {
+        container.style.display = 'flex';
+        chevron.style.transform = 'rotate(180deg)';
+    } else {
+        container.style.display = 'none';
+        chevron.style.transform = 'rotate(0deg)';
+    }
 }
 
 function updateSummary(summaryData = null) {
@@ -120,6 +142,8 @@ function updateSummary(summaryData = null) {
     const shipping = summaryData.shipping;
     const tax = summaryData.tax;
     const total = summaryData.total;
+    const mrp = summaryData.mrp;
+    const discount = summaryData.discount;
     const cartCount = summaryData.count;
     const shippingOptions = summaryData.shipping_options;
 
@@ -146,6 +170,15 @@ function updateSummary(summaryData = null) {
     });
 
     // Update Summary UI
+    const mrpLabel = document.getElementById('summary-mrp-label');
+    if (mrpLabel) mrpLabel.textContent = `Price (${cartCount} items)`;
+
+    const mrpElem = document.getElementById('summary-mrp');
+    if (mrpElem && mrp !== undefined) mrpElem.textContent = '₹' + new Intl.NumberFormat('en-IN').format(Math.round(mrp));
+
+    const discountElem = document.getElementById('summary-discount');
+    if (discountElem && discount !== undefined) discountElem.textContent = '-₹' + new Intl.NumberFormat('en-IN').format(Math.round(discount));
+
     const subtotalElem = document.getElementById('summary-subtotal');
     if (subtotalElem) subtotalElem.textContent = '₹' + new Intl.NumberFormat('en-IN').format(Math.round(subtotal));
     

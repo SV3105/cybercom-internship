@@ -96,6 +96,16 @@ function renderProductsGrid($items, $page, $total_pages) {
     if(!empty($items)):
         foreach($items as $product): 
             $qty = isset($cart[$product['id']]) ? (int)$cart[$product['id']] : 0;
+            
+            // Calculate Discount
+            $discount_percent = 0;
+            if($product['old_price']) {
+                $p_val = floatval(str_replace(',', '', $product['price']));
+                $o_val = floatval(str_replace(',', '', $product['old_price']));
+                if($o_val > 0) {
+                    $discount_percent = round((($o_val - $p_val) / $o_val) * 100);
+                }
+            }
             ?>
     <div class="product-card" data-id="<?php echo $product['id']; ?>">
         <?php 
@@ -105,10 +115,17 @@ function renderProductsGrid($items, $page, $total_pages) {
             <i class="<?php echo $in_wishlist ? 'fas active-wishlist' : 'far'; ?> fa-heart"></i>
         </button>
         <div class="product-image-container">
+            <?php if($discount_percent > 0): ?>
+                <span class="discount-badge"><?php echo $discount_percent; ?>% OFF</span>
+            <?php endif; ?>
             <img src="../images/<?php echo $product['image']; ?>" alt="<?php echo $product['title']; ?>">
         </div>
         <h3><?php echo $product['title']; ?></h3>
-        <p class="price">₹<?php echo $product['price']; ?></p>
+        <p class="price">₹<?php echo $product['price']; ?>
+            <?php if($product['old_price']): ?>
+                <span class="old-price">₹<?php echo $product['old_price']; ?></span>
+            <?php endif; ?>
+        </p>
         
         <div class="quick-add-container">
             <?php if ($qty > 0): ?>

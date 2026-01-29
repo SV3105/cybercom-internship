@@ -260,10 +260,30 @@ footer .container {
     border-top: 1px solid var(--border-color);
 }
 
+.shipping-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    margin-bottom: 1rem;
+    padding: 0.5rem;
+    border-radius: 8px;
+    transition: background 0.2s;
+}
+
+.shipping-header:hover {
+    background: #f3f4f6;
+}
+
+.shipping-header i {
+    transition: transform 0.3s ease;
+    color: var(--text-secondary);
+}
+
 .shipping-methods h4 {
     font-size: 0.95rem;
     font-weight: 700;
-    margin-bottom: 1rem;
+    margin-bottom: 0;
     color: var(--text-primary);
 }
 
@@ -571,8 +591,22 @@ footer .container {
     transition: all 0.2s;
 }
 
-.btn-add-more:hover {
-    background: #e5e7eb;
-    color: #111;
-    text-decoration: none;
+
+/* Discount Styling */
+.cart-old-price {
+    text-decoration: line-through;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-right: 0.5rem;
+    font-weight: 400;
+}
+
+.cart-discount-badge {
+    background: #e0f2fe; /* Light blue */
+    color: #0284c7; /* Blue text */
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 6px;
+    display: inline-block;
 }

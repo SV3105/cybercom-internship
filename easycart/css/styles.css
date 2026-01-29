@@ -1217,3 +1217,27 @@ footer p {
 .w-100 {
   width: 100%;
 }
+
+/* Discount Badge Global Style */
+.discount-badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: #ef4444; /* Red color */
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 4px 8px;
+    border-radius: 6px;
+    z-index: 2;
+    box-shadow: 0 4px 6px -1px rgba(220, 38, 38, 0.3);
+}
+
+/* Old Price Global Style */
+.old-price {
+    text-decoration: line-through;
+    color: #9ca3af; /* Gray color */
+    font-size: 0.9rem;
+    margin-left: 8px;
+    font-weight: 400;
+}

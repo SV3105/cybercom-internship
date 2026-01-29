@@ -5,6 +5,7 @@ $base_path = "./";
 $page = "home";
 include './data/products_data.php';
 
+
 include './includes/header.php'; 
 ?>
 
@@ -75,13 +76,29 @@ include './includes/header.php';
 
             <!-- Featured Products -->
             <section class="section section-blockbuster">
-                <h2>Blockbuster Deals</h2>
+                <div class="section-header">
+                    <h2>Blockbuster Deals</h2>
+                    <a href="./php/products.php" class="view-all">View All <i class="fas fa-arrow-right"></i></a>
+                </div>
                 <div class="products-grid">
                     <?php 
                     $cart = isset($_SESSION['cart']) ? $_SESSION['cart'] : [];
+                    $bb_count = 0;
                     foreach($products as $product): ?>
                         <?php if(isset($product['featured']) && $product['featured']): 
+                            if($bb_count >= 4) break;
+                            $bb_count++;
                             $qty = isset($cart[$product['id']]) ? (int)$cart[$product['id']] : 0;
+                            
+                            // Calculate Discount
+                            $discount_percent = 0;
+                            if($product['old_price']) {
+                                $p_val = floatval(str_replace(',', '', $product['price']));
+                                $o_val = floatval(str_replace(',', '', $product['old_price']));
+                                if($o_val > 0) {
+                                    $discount_percent = round((($o_val - $p_val) / $o_val) * 100);
+                                }
+                            }
                         ?>
                         <div class="product-card" data-id="<?php echo $product['id']; ?>">
                             <?php 
@@ -91,6 +108,9 @@ include './includes/header.php';
                                 <i class="<?php echo $in_wishlist ? 'fas active-wishlist' : 'far'; ?> fa-heart"></i>
                             </button>
                             <div class="product-image-container">
+                                <?php if($discount_percent > 0): ?>
+                                    <span class="discount-badge"><?php echo $discount_percent; ?>% OFF</span>
+                                <?php endif; ?>
                                 <img src="./images/<?php echo $product['image']; ?>" alt="<?php echo $product['title']; ?>">
                             </div>
                             <h3><?php echo $product['title']; ?></h3>
@@ -150,6 +170,14 @@ include './includes/header.php';
                     <a href="./php/products.php?brand=noise" class="brand-card">
                         <h3 class="brand-noise">Noise</h3>
                         <p>Smart Tech</p>
+                    </a>
+                    <a href="./php/products.php?brand=vip" class="brand-card">
+                        <h3 class="brand-vip">VIP</h3>
+                        <p>Travel Gear</p>
+                    </a>
+                    <a href="./php/products.php?brand=bajaj" class="brand-card">
+                        <h3 class="brand-bajaj">Bajaj</h3>
+                        <p>Home Appliances</p>
                     </a>
                 </div>
             </section>

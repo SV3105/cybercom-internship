@@ -20,6 +20,8 @@ if (!isset($_SESSION['cart'])) {
  */
 function calculateCartTotals($cart_items, $products_data) {
     $subtotal = 0;
+    $total_mrp = 0;
+    $total_discount = 0;
     
     // Calculate Subtotal
     foreach($cart_items as $p_id => $qty) {
@@ -28,10 +30,19 @@ function calculateCartTotals($cart_items, $products_data) {
                 // Remove commas from price string (e.g. "1,200" -> 1200)
                 $price_val = (float)str_replace(',', '', $p['price']);
                 $subtotal += $price_val * $qty;
+                
+                // MRP Calculation
+                $mrp_val = $price_val; // Default to selling price if no old price
+                if(isset($p['old_price']) && !empty($p['old_price'])) {
+                    $mrp_val = (float)str_replace(',', '', $p['old_price']);
+                }
+                $total_mrp += $mrp_val * $qty;
                 break;
             }
         }
     }
+    
+    $total_discount = $total_mrp - $subtotal;
 
     // Shipping Rules
     $shipping_options = [
@@ -62,7 +73,10 @@ function calculateCartTotals($cart_items, $products_data) {
         'tax' => $tax,
         'total' => $total,
         'shipping_options' => $shipping_options,
-        'item_count' => array_sum($cart_items)
+        'shipping_options' => $shipping_options,
+        'item_count' => array_sum($cart_items),
+        'total_mrp' => $total_mrp,
+        'total_discount' => $total_discount
     ];
 }
 
@@ -72,13 +86,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     
     if ($_POST['action'] === 'update_qty' && $p_id > 0) {
         if (isset($_POST['qty'])) {
-            $_SESSION['cart'][$p_id] = (int)$_POST['qty'];
+            $new_qty = (int)$_POST['qty'];
+            if ($new_qty > 5) $new_qty = 5;
+            $_SESSION['cart'][$p_id] = $new_qty;
         } elseif (isset($_POST['change'])) {
             $change = (int)$_POST['change'];
             if (!isset($_SESSION['cart'][$p_id])) {
                 $_SESSION['cart'][$p_id] = 0;
             }
             $_SESSION['cart'][$p_id] += $change;
+            if ($_SESSION['cart'][$p_id] > 5) $_SESSION['cart'][$p_id] = 5;
         }
         
         if (isset($_SESSION['cart'][$p_id]) && $_SESSION['cart'][$p_id] <= 0) {
@@ -127,7 +144,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 'shipping' => $totals['shipping_cost'], // JS expects 'shipping'
                 'tax' => $totals['tax'],
                 'total' => $totals['total'],
+                'total' => $totals['total'],
                 'count' => $totals['item_count'],
+                'mrp' => $totals['total_mrp'],
+                'discount' => $totals['total_discount'],
                 'shipping_options' => $totals['shipping_options']
             ]
         ]);
@@ -187,7 +207,20 @@ include '../includes/header.php';
                     <div class="item-details">
                         <h3><?php echo $item['title']; ?></h3>
                         <p class="item-category"><?php echo ucfirst($item['category']); ?></p>
-                        <h4 class="item-price">₹<?php echo $item['price']; ?></h4>
+                        <h4 class="item-price">
+                            ₹<?php echo $item['price']; ?>
+                            <?php if(isset($item['old_price']) && !empty($item['old_price'])): ?>
+                                <span class="cart-old-price">₹<?php echo $item['old_price']; ?></span>
+                                <?php 
+                                    $p_val = (float)str_replace(',', '', $item['price']);
+                                    $o_val = (float)str_replace(',', '', $item['old_price']);
+                                    if($o_val > 0) {
+                                        $d_pct = round((($o_val - $p_val) / $o_val) * 100);
+                                        if($d_pct > 0) echo "<span class='cart-discount-badge'>{$d_pct}% OFF</span>";
+                                    }
+                                ?>
+                            <?php endif; ?>
+                        </h4>
                     </div>
                     <div class="item-actions">
                         <div class="quantity-control">
@@ -226,7 +259,10 @@ include '../includes/header.php';
                 $subtotal = $cart_totals['subtotal']; // Note: This overwrites the loop subtotal, which is safer
                 $shipping_cost = $cart_totals['shipping_cost'];
                 $tax = $cart_totals['tax'];
+                $tax = $cart_totals['tax'];
                 $total = $cart_totals['total'];
+                $total_mrp = $cart_totals['total_mrp'];
+                $total_discount = $cart_totals['total_discount'];
                 $shipping_options = $cart_totals['shipping_options'];
                 $shipping_method = isset($_SESSION['shipping_method']) ? $_SESSION['shipping_method'] : 'standard';
                 ?>
@@ -236,6 +272,14 @@ include '../includes/header.php';
             <!-- Cart Summary -->
             <div class="cart-summary">
                 <h3>Order Summary</h3>
+                <div class="summary-item">
+                    <span id="summary-mrp-label">Price (<?php echo $cart_totals['item_count']; ?> items)</span>
+                    <span id="summary-mrp">₹<?php echo number_format($total_mrp); ?></span>
+                </div>
+                 <div class="summary-item">
+                    <span>Discount</span>
+                    <span id="summary-discount" style="color: var(--success, #16a34a);">-₹<?php echo number_format($total_discount); ?></span>
+                </div>
                 <div class="summary-item">
                     <span>Subtotal</span>
                     <span id="summary-subtotal">₹<?php echo number_format($subtotal); ?></span>
@@ -250,8 +294,11 @@ include '../includes/header.php';
                 </div>
                 
                 <div class="shipping-methods">
-                    <h4>Shipping Method</h4>
-                    <div class="shipping-options">
+                    <div class="shipping-header" onclick="toggleShipping()">
+                        <h4>Shipping Method</h4>
+                        <i class="fas fa-chevron-down" id="shipping-chevron"></i>
+                    </div>
+                    <div class="shipping-options" id="shipping-options-container" style="display: none;">
                         <!-- Standard Shipping -->
                         <label class="shipping-option <?php echo ($shipping_method === 'standard') ? 'selected' : ''; ?>">
                             <input type="radio" name="shipping_method" value="standard" <?php echo ($shipping_method === 'standard') ? 'checked' : ''; ?> onchange="updateShipping('standard')">
@@ -370,7 +417,7 @@ include '../includes/header.php';
         </div>
     </div>
 
-    <script src="../js/cart.js"></script>
+    <script src="../js/cart.js?v=<?php echo time(); ?>"></script>
 
 
 <?php include '../includes/footer.php'; ?>
