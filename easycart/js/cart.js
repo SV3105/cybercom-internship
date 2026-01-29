@@ -111,8 +111,6 @@ function updateShipping(method) {
     .then(data => {
         if (data.success) {
             updateSummary(data.summary);
-            // Auto close after selection (optional, but requested to save space)
-            toggleShipping(); 
         }
     })
     .catch(err => console.error('Error updating shipping:', err));
@@ -144,6 +142,8 @@ function updateSummary(summaryData = null) {
     const total = summaryData.total;
     const mrp = summaryData.mrp;
     const discount = summaryData.discount;
+    const smartDiscount = summaryData.smart_discount;
+    const smartReason = summaryData.reason;
     const cartCount = summaryData.count;
     const shippingOptions = summaryData.shipping_options;
 
@@ -178,6 +178,20 @@ function updateSummary(summaryData = null) {
 
     const discountElem = document.getElementById('summary-discount');
     if (discountElem && discount !== undefined) discountElem.textContent = '-₹' + new Intl.NumberFormat('en-IN').format(Math.round(discount));
+
+    const smartRow = document.getElementById('row-smart-discount');
+    const smartElem = document.getElementById('summary-smart-discount');
+    const tooltipElem = document.getElementById('tooltip-text');
+
+    if (smartRow && smartElem) {
+        if (smartDiscount > 0) {
+            smartRow.style.display = 'flex';
+            smartElem.textContent = '-₹' + new Intl.NumberFormat('en-IN').format(Math.round(smartDiscount));
+            if (tooltipElem && smartReason) tooltipElem.textContent = smartReason;
+        } else {
+            smartRow.style.display = 'none';
+        }
+    }
 
     const subtotalElem = document.getElementById('summary-subtotal');
     if (subtotalElem) subtotalElem.textContent = '₹' + new Intl.NumberFormat('en-IN').format(Math.round(subtotal));

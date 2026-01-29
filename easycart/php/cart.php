@@ -41,15 +41,40 @@ function calculateCartTotals($cart_items, $products_data) {
             }
         }
     }
-    
     $total_discount = $total_mrp - $subtotal;
+
+    // Smart Discount Logic (Best of 3)
+    $smart_discount = 0;
+    $reason = "";
+    $item_count = array_sum($cart_items);
+
+    // Scheme A: Bulk (>3 items) -> 5%
+    $scheme_a = ($item_count > 3) ? ($subtotal * 0.05) : 0;
+    
+    // Scheme B: Big Spender (>10k) -> Flat 1000
+    $scheme_b = ($subtotal > 10000) ? 1000 : 0;
+
+    // Scheme C: Mega Tier (>25k) -> 12%
+    $scheme_c = ($subtotal > 25000) ? ($subtotal * 0.12) : 0;
+
+    // Find Winner
+    if ($scheme_c >= $scheme_b && $scheme_c >= $scheme_a && $scheme_c > 0) {
+        $smart_discount = $scheme_c;
+        $reason = "Mega Tier (12% off for orders over ₹25,000)";
+    } elseif ($scheme_b >= $scheme_a && $scheme_b > 0) {
+        $smart_discount = $scheme_b;
+        $reason = "Big Spender (Flat ₹1,000 off for orders over ₹10,000)";
+    } elseif ($scheme_a > 0) {
+        $smart_discount = $scheme_a;
+        $reason = "Bulk Saver (5% off for buying more than 3 items)";
+    }
 
     // Shipping Rules
     $shipping_options = [
-        'standard' => 40,
-        'express' => min(80, $subtotal * 0.10),
-        'white_glove' => min(150, $subtotal * 0.05),
-        'freight' => max(200, $subtotal * 0.03)
+        'standard' => 80,
+        'express' => min(120, $subtotal * 0.10),
+        'white_glove' => min(180, $subtotal * 0.05),
+        'freight' => max(250, $subtotal * 0.03)
     ];
 
     // Determine Selected Shipping Cost
@@ -64,8 +89,8 @@ function calculateCartTotals($cart_items, $products_data) {
     }
 
     // Tax (18%)
-    $tax = ($subtotal + $shipping_cost) * 0.18;
-    $total = $subtotal + $shipping_cost + $tax;
+    $tax = ($subtotal - $smart_discount + $shipping_cost) * 0.18;
+    $total = ($subtotal - $smart_discount) + $shipping_cost + $tax;
 
     return [
         'subtotal' => $subtotal,
@@ -73,10 +98,11 @@ function calculateCartTotals($cart_items, $products_data) {
         'tax' => $tax,
         'total' => $total,
         'shipping_options' => $shipping_options,
-        'shipping_options' => $shipping_options,
-        'item_count' => array_sum($cart_items),
+        'item_count' => $item_count,
         'total_mrp' => $total_mrp,
-        'total_discount' => $total_discount
+        'total_discount' => $total_discount,
+        'smart_discount' => $smart_discount,
+        'discount_reason' => $reason
     ];
 }
 
@@ -148,6 +174,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 'count' => $totals['item_count'],
                 'mrp' => $totals['total_mrp'],
                 'discount' => $totals['total_discount'],
+                'smart_discount' => $totals['smart_discount'],
+                'reason' => $totals['discount_reason'],
                 'shipping_options' => $totals['shipping_options']
             ]
         ]);
@@ -263,6 +291,8 @@ include '../includes/header.php';
                 $total = $cart_totals['total'];
                 $total_mrp = $cart_totals['total_mrp'];
                 $total_discount = $cart_totals['total_discount'];
+                $smart_discount = $cart_totals['smart_discount'];
+                $reason = $cart_totals['discount_reason'];
                 $shipping_options = $cart_totals['shipping_options'];
                 $shipping_method = isset($_SESSION['shipping_method']) ? $_SESSION['shipping_method'] : 'standard';
                 ?>
@@ -280,6 +310,31 @@ include '../includes/header.php';
                     <span>Discount</span>
                     <span id="summary-discount" style="color: var(--success, #16a34a);">-₹<?php echo number_format($total_discount); ?></span>
                 </div>
+                <?php if($smart_discount > 0): ?>
+                <div class="summary-item" id="row-smart-discount">
+                    <span class="smart-label">
+                        Smart Discount 
+                        <div class="tooltip-container">
+                            <i class="fas fa-info-circle info-icon"></i>
+                            <span class="tooltip-text" id="tooltip-text">
+                                <?php echo !empty($reason) ? $reason : 'Discount Applied'; ?>
+                            </span>
+                        </div>
+                    </span>
+                    <span id="summary-smart-discount" style="color: var(--success, #16a34a);">-₹<?php echo number_format($smart_discount); ?></span>
+                </div>
+                <?php else: ?>
+                <div class="summary-item" id="row-smart-discount" style="display:none;">
+                    <span class="smart-label">
+                        Smart Discount
+                        <div class="tooltip-container">
+                            <i class="fas fa-info-circle info-icon"></i>
+                            <span class="tooltip-text" id="tooltip-text"></span>
+                        </div>
+                    </span>
+                    <span id="summary-smart-discount" style="color: var(--success, #16a34a);">-₹0</span>
+                </div>
+                <?php endif; ?>
                 <div class="summary-item">
                     <span>Subtotal</span>
                     <span id="summary-subtotal">₹<?php echo number_format($subtotal); ?></span>
@@ -306,7 +361,7 @@ include '../includes/header.php';
                                 <span class="shipping-option-name">Standard Shipping</span>
                                 <span class="shipping-option-desc">Flat Rate Delivery</span>
                             </div>
-                            <span class="shipping-option-price">₹40</span>
+                            <span class="shipping-option-price">₹80</span>
                         </label>
                         
                         <!-- Express Shipping -->
@@ -314,7 +369,7 @@ include '../includes/header.php';
                             <input type="radio" name="shipping_method" value="express" <?php echo ($shipping_method === 'express') ? 'checked' : ''; ?> onchange="updateShipping('express')">
                             <div class="shipping-option-info">
                                 <span class="shipping-option-name">Express Shipping</span>
-                                <span class="shipping-option-desc">₹80 or 10% (Lowest)</span>
+                                <span class="shipping-option-desc">₹120 or 10% (Lowest)</span>
                             </div>
                             <span class="shipping-option-price">₹<?php echo number_format($shipping_options['express']); ?></span>
                         </label>
@@ -324,7 +379,7 @@ include '../includes/header.php';
                             <input type="radio" name="shipping_method" value="white_glove" <?php echo ($shipping_method === 'white_glove') ? 'checked' : ''; ?> onchange="updateShipping('white_glove')">
                             <div class="shipping-option-info">
                                 <span class="shipping-option-name">White Glove Delivery</span>
-                                <span class="shipping-option-desc">₹150 or 5% (Lowest)</span>
+                                <span class="shipping-option-desc">₹180 or 5% (Lowest)</span>
                             </div>
                             <span class="shipping-option-price">₹<?php echo number_format($shipping_options['white_glove']); ?></span>
                         </label>
@@ -334,7 +389,7 @@ include '../includes/header.php';
                             <input type="radio" name="shipping_method" value="freight" <?php echo ($shipping_method === 'freight') ? 'checked' : ''; ?> onchange="updateShipping('freight')">
                             <div class="shipping-option-info">
                                 <span class="shipping-option-name">Freight Shipping</span>
-                                <span class="shipping-option-desc">3% or Min ₹200</span>
+                                <span class="shipping-option-desc">3% or Min ₹250</span>
                             </div>
                             <span class="shipping-option-price">₹<?php echo number_format($shipping_options['freight']); ?></span>
                         </label>
