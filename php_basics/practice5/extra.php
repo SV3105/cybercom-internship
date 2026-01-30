@@ -42,9 +42,30 @@ class Config{
 
 $obj = new Config();
 isset($obj->pass);
-
+echo("<br>");
+echo("<br>");
 ?>
 
 <?php 
 //All magic methods, with the exception of __construct(), __destruct(), and __clone(), must be declared as public, otherwise an fatal error is emitted. 
+class userSession{
+    public $name;
+    function __construct($name){
+        $this->name = $name;
+       echo "User ". $this->name . " logged in". "<br>";
+       echo("<br>");
+    }
+
+    function showDashboard(){
+        echo "user dashboard". "<br>";
+        echo("<br>");
+    }
+
+    function __destruct(){
+        echo "User". $this->name . " logged out". "<br>";
+    }
+}
+
+$p1 = new userSession("xyz");
+$p1->showDashboard();
 ?>
