@@ -27,5 +27,39 @@ class Manager extends Employee{
 }
 
 $obj = new Manager("xyz", 10000, "IT");
-echo $obj->getDetails();
+echo $obj->getDetails(). "<br />";
+echo "<br />"
+?>
+
+<?php 
+class user{
+    public $name;
+    public $age;
+   
+
+    function __construct($name, $age){
+        $this->name = $name;
+        $this->age = $age;
+     
+    }
+
+    public function __toString(){
+        return json_encode($this);
+    }
+
+    public function __get($property){
+        return "The property '$property' does not exist.";
+    }
+
+    public function __set($property, $value){
+        return "$property set to $value";
+    }
+}
+
+
+$obj = new user("xyz", 25);
+
+echo $obj. "<br />";
+echo $obj->email = "sneha@gmail.com". "<br />";
+echo $obj->email;
 ?>
