@@ -25,8 +25,7 @@ function diamond($n){
      echo "</pre>";
 }
 
-function numberedDiamond(){
-$rows = 7;
+function numberedDiamond($rows){
 $count = 1;
 $mid = ceil($rows/2);
 echo "<pre>";
@@ -57,4 +56,39 @@ for($i=$mid-1; $i>0; $i--){
 }
  echo "</pre>";
 }
+
+function butterflyPattern($rows){
+$mid = round($rows / 2);
+echo "<pre>";
+for($i=1; $i<=$mid; $i++){
+    for($j=1; $j<=$i; $j++){
+        echo "*";
+    }
+    for($k=2*($mid - $i); $k>0; $k--){
+        echo " ";
+    }
+    for($j=1; $j<=$i; $j++){
+        echo "*";
+    }
+    echo "<br>";
+ }
+for($i=$mid; $i>0; $i--){
+    for($j=$i; $j>0; $j--){
+        echo "*";
+    }
+    for($k=1; $k<=2*($mid-$i); $k++){
+        echo " ";
+    }
+     for($j=$i; $j>0; $j--){
+        echo "*";
+    }
+    echo "<br>";
+}
+echo "</pre>";
+}
+
+// diamond(7);
+// numberedDiamond(9);
+// butterflyPattern(10);
 ?>
+
