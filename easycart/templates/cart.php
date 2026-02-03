@@ -252,73 +252,9 @@
                     <span id="summary-total">₹<?php echo number_format($total, 2); ?></span>
                 </div>
                 
-                <a href="#checkout-modal" class="checkout-btn" style="text-align: center; text-decoration: none;">Proceed to Checkout</a>
+                <a href="checkout.php" class="checkout-btn" style="text-align: center; text-decoration: none;">Proceed to Checkout</a>
             </div>
             <?php endif; ?>
-        </div>
-    </div>
-
-    <!-- Checkout Modal (Pure CSS Target) -->
-    <div id="checkout-modal" class="modal-overlay">
-        <a href="#" class="modal-close-area"></a>
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Checkout</h2>
-                <a href="#" class="close-btn">&times;</a>
-            </div>
-            <div class="modal-body">
-                <form action="#" class="checkout-form" id="checkoutForm">
-                    <div class="form-section">
-                        <h4>Contact Info</h4>
-                        <div class="form-group">
-                            <label>Full Name</label>
-                            <input type="text" id="checkoutName" placeholder="John Doe" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Email Address</label>
-                            <input type="email" id="checkoutEmail" placeholder="john@example.com" required>
-                        </div>
-                    </div>
-                    
-                    <div class="form-section address-highlight">
-                        <h4>Shipping Address</h4>
-                        <div class="form-group">
-                            <label>Address</label>
-                            <input type="text" id="checkoutAddress" placeholder="123 Street Name" required>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>City</label>
-                                <input type="text" id="checkoutCity" placeholder="City" required>
-                            </div>
-                            <div class="form-group">
-                                <label>Postal Code</label>
-                                <input type="text" id="checkoutZip" placeholder="000000" required>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="form-section">
-                        <h4>Payment</h4>
-                        <div class="form-group">
-                            <label>Card Number</label>
-                            <input type="text" id="checkoutCard" placeholder="0000 0000 0000 0000" required>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>Expiry</label>
-                                <input type="text" id="checkoutExpiry" placeholder="MM/YY" required>
-                            </div>
-                            <div class="form-group">
-                                <label>CVV</label>
-                                <input type="text" id="checkoutCVV" placeholder="123" required>
-                            </div>
-                        </div>
-                    </div>
-
-                    <button type="submit" class="btn btn-block" id="checkout-btn-text">Place Order (₹<?php echo number_format($total, 2); ?>)</button>
-                </form>
-            </div>
         </div>
     </div>
 

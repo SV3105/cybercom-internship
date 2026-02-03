@@ -12,13 +12,7 @@
             </div>
             <?php else: ?>
             
-            <?php foreach($orders as $order): 
-                $total = 0;
-                foreach($order['items'] as $item) {
-                     $p = (float)str_replace(',', '', $item['price']);
-                     $total += $p * $item['qty'];
-                }
-            ?>
+            <?php foreach($orders as $order): ?>
             <div class="order-card" style="background: #fff; border: 1px solid #eee; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
                 <div class="order-header" style="display: flex; justify-content: space-between; border-bottom: 1px solid #f0f0f0; padding-bottom: 1rem; margin-bottom: 1rem;">
                     <div>
@@ -46,7 +40,7 @@
                         ">
                             <?php echo $order['status']; ?>
                         </span>
-                        <p style="margin: 0.5rem 0 0; font-weight: 600; color: #333;">Total: ₹<?php echo number_format($total); ?></p>
+                        <p style="margin: 0.5rem 0 0; font-weight: 600; color: #333;">Total: ₹<?php echo $order['total']; ?></p>
                     </div>
                 </div>
                 

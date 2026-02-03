@@ -48,7 +48,7 @@ try {
             'status'      => ucfirst($row['status']),
             'status_code' => strtolower($row['status']),
             'items'       => $formattedItems,
-            'total'       => number_format($row['grand_total'])
+            'total'       => number_format($row['grand_total'], 2)
         ];
     }
 

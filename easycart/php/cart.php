@@ -100,6 +100,18 @@ function loadCartFromDb($user_id) {
     return $db_cart;
 }
 
+function getActiveCartId($user_id) {
+    global $pdo;
+    try {
+        $stmt = $pdo->prepare("SELECT id FROM sales_cart WHERE user_id = ? AND is_active = TRUE");
+        $stmt->execute([$user_id]);
+        return $stmt->fetchColumn();
+    } catch (PDOException $e) {
+        error_log("Get Cart ID Error: " . $e->getMessage());
+        return false;
+    }
+}
+
 // 1. Initialize Cart
 if (!isset($_SESSION['cart'])) {
     $_SESSION['cart'] = [];
@@ -243,7 +255,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     
     // --- CHECKOUT LOGIC ---
     if ($_POST['action'] === 'checkout') {
-        // [Existing Checkout Logic]
         if (!isset($_SESSION['user'])) {
              if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
                  echo json_encode(['success' => false, 'message' => 'Please login to checkout.']);
@@ -263,18 +274,95 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
              exit;
         }
 
+        // Get address data from POST
+        $firstname = $_POST['firstname'] ?? '';
+        $lastname = $_POST['lastname'] ?? '';
+        $email = $_POST['email'] ?? '';
+        $phone = $_POST['phone'] ?? '';
+        $street = $_POST['street'] ?? '';
+        $city = $_POST['city'] ?? '';
+        $postcode = $_POST['postcode'] ?? '';
+        $payment_method = $_POST['payment_method'] ?? 'cod';
+
         $totals = calculateCartTotals($_SESSION['cart'], $products);
 
         try {
             $pdo->beginTransaction();
-            $increment_id = time() . '-' . $user_id; 
             
-            $stmtOrder = $pdo->prepare("INSERT INTO sales_order (increment_id, user_id, status, subtotal, shipping_amount, tax_amount, grand_total, customer_email, created_at) VALUES (?, ?, 'processing', ?, ?, ?, ?, ?, NOW()) RETURNING order_id");
+            // Get or create active cart
+            $cart_id = getActiveCartId($user_id);
+            
+            // If no ACTIVE cart found by user_id, check by session_id (active or inactive)
+            if (!$cart_id) {
+                $stmt = $pdo->prepare("SELECT id, is_active FROM sales_cart WHERE session_id = ? ORDER BY created_at DESC LIMIT 1");
+                $stmt->execute([session_id()]);
+                $result = $stmt->fetch();
+                
+                if ($result) {
+                    $cart_id = $result['id'];
+                    // Reactivate and link to user if needed
+                    $pdo->prepare("UPDATE sales_cart SET user_id = ?, is_active = TRUE WHERE id = ?")->execute([$user_id, $cart_id]);
+                }
+            }
+            
+            // Only create if still no cart found
+            if (!$cart_id) {
+                $stmtCart = $pdo->prepare("INSERT INTO sales_cart (user_id, session_id, is_active, created_at) VALUES (?, ?, TRUE, NOW()) RETURNING id");
+                $stmtCart->execute([$user_id, session_id()]);
+                $cart_id = $stmtCart->fetchColumn();
+            }
+            
+            // 1. Save Address to sales_cart_address (without telephone - not in schema)
+            $pdo->prepare("DELETE FROM sales_cart_address WHERE cart_id = ?")->execute([$cart_id]);
+            $stmtAddr = $pdo->prepare("
+                INSERT INTO sales_cart_address 
+                (cart_id, address_type, firstname, lastname, email, street, city, postcode) 
+                VALUES (?, 'shipping', ?, ?, ?, ?, ?, ?)
+            ");
+            $stmtAddr->execute([$cart_id, $firstname, $lastname, $email, $street, $city, $postcode]);
+            
+            // 2. Save Shipping to sales_cart_shipping
+            $pdo->prepare("DELETE FROM sales_cart_shipping WHERE cart_id = ?")->execute([$cart_id]);
+            $stmtShip = $pdo->prepare("
+                INSERT INTO sales_cart_shipping (cart_id, method_code, price) 
+                VALUES (?, ?, ?)
+            ");
+            $stmtShip->execute([$cart_id, $totals['selected_method'], $totals['shipping_cost']]);
+            
+            // 3. Save Payment to sales_cart_payment
+            $pdo->prepare("DELETE FROM sales_cart_payment WHERE cart_id = ?")->execute([$cart_id]);
+            $stmtPay = $pdo->prepare("
+                INSERT INTO sales_cart_payment (cart_id, method_code) 
+                VALUES (?, ?)
+            ");
+            $stmtPay->execute([$cart_id, $payment_method]);
+            
+            // 4. Create Order
+            $increment_id = time() . '-' . $user_id; 
+            $stmtOrder = $pdo->prepare("
+                INSERT INTO sales_order 
+                (increment_id, user_id, status, subtotal, shipping_amount, tax_amount, grand_total, customer_email, created_at) 
+                VALUES (?, ?, 'processing', ?, ?, ?, ?, ?, NOW()) 
+                RETURNING order_id
+            ");
             $customer_email = $_SESSION['user']['email'];
-            $stmtOrder->execute([$increment_id, $user_id, $totals['subtotal'], $totals['shipping_cost'], $totals['tax'], $totals['total'], $customer_email]);
+            $stmtOrder->execute([
+                $increment_id, 
+                $user_id, 
+                $totals['subtotal'], 
+                $totals['shipping_cost'], 
+                $totals['tax'], 
+                $totals['total'], 
+                $customer_email
+            ]);
             $order_id = $stmtOrder->fetchColumn();
 
-            $stmtItem = $pdo->prepare("INSERT INTO sales_order_products (order_id, product_id, sku, name, price, quantity, total_price) VALUES (?, ?, ?, ?, ?, ?, ?)");
+            // 5. Insert Order Items
+            $stmtItem = $pdo->prepare("
+                INSERT INTO sales_order_products 
+                (order_id, product_id, sku, name, price, quantity, total_price) 
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            ");
             foreach($_SESSION['cart'] as $pid => $qty) {
                  $product = null;
                  foreach($products as $p) {
@@ -291,9 +379,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                  }
             }
             
-            // --- CLOSE DB CART ON CHECKOUT ---
-            $stmtCloseCart = $pdo->prepare("UPDATE sales_cart SET is_active = FALSE WHERE user_id = ? AND is_active = TRUE");
-            $stmtCloseCart->execute([$user_id]);
+            // 6. Insert Address to sales_order_address (with telephone from POST)
+            $stmtOrderAddr = $pdo->prepare("
+                INSERT INTO sales_order_address 
+                (order_id, address_type, firstname, lastname, street, city, postcode, telephone)
+                VALUES (?, 'shipping', ?, ?, ?, ?, ?, ?)
+            ");
+            $stmtOrderAddr->execute([$order_id, $firstname, $lastname, $street, $city, $postcode, $phone]);
+            
+            // 7. Copy Payment to sales_order_payment
+            $stmtOrderPay = $pdo->prepare("
+                INSERT INTO sales_order_payment (order_id, method)
+                SELECT ?, method_code 
+                FROM sales_cart_payment 
+                WHERE cart_id = ?
+            ");
+            $stmtOrderPay->execute([$order_id, $cart_id]);
+            
+            // 8. Deactivate Cart
+            $stmtCloseCart = $pdo->prepare("UPDATE sales_cart SET is_active = FALSE WHERE id = ?");
+            $stmtCloseCart->execute([$cart_id]);
 
             $pdo->commit();
             
@@ -315,7 +420,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 echo json_encode(['success' => false, 'message' => 'Order failed: ' . $e->getMessage()]);
                 exit;
             }
-            die("Order creation failed");
+            die("Order creation failed: " . $e->getMessage());
         }
     }
     // --- UPDATES ---
