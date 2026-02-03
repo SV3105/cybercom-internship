@@ -104,12 +104,72 @@ function validatePaymentForm() {
         alert('Please select a payment method');
         return false;
     }
+
+    const method = selectedPayment.value;
+    const detailsContainer = document.getElementById(`details-${method}`);
+
+    // If there is a details container for this method (COD might not have inputs)
+    if (detailsContainer) {
+        const inputs = detailsContainer.querySelectorAll('input[type="text"], input[type="password"], select');
+        
+        for (let input of inputs) {
+            // Check if visible and empty
+            if (input.offsetParent !== null && !input.value.trim()) {
+                // Get label text for better error message
+                let labelText = "Field";
+                const label = input.closest('.form-group')?.querySelector('label');
+                if (label) labelText = label.textContent;
+
+                alert(`Please enter ${labelText} for ${method.toUpperCase()}`);
+                input.focus();
+                return false;
+            }
+        }
+        
+        // Specific format validation (Optional)
+        if (method === 'card') {
+            const cardNum = detailsContainer.querySelector('input[placeholder*="0000 0000"]').value.replace(/\s/g, '');
+            if (cardNum.length < 16 || isNaN(cardNum)) {
+                alert('Please enter a valid Card Number');
+                return false;
+            }
+        }
+    }
+    
+    // Capture Details for Storage
+    let info = {};
+    if (method === 'card') {
+         info = {
+             card_number: detailsContainer.querySelector('input[placeholder*="0000 0000"]').value,
+             card_holder: detailsContainer.querySelector('input[placeholder*="Name"]').value,
+             expiry: detailsContainer.querySelector('input[placeholder*="MM/YY"]').value
+         };
+    }
     
     formData.payment = {
-        method: selectedPayment.value
+        method: method,
+        info: JSON.stringify(info)
     };
     
     return true;
+}
+
+// Toggle Payment Details
+function togglePaymentDetails(radio) {
+    // Hide all details
+    document.querySelectorAll('.payment-details').forEach(el => {
+        el.style.display = 'none';
+        // Remove 'active' class from parent label if needed for styling
+        el.closest('.payment-method-group').querySelector('.payment-option').classList.remove('selected'); 
+    });
+
+    // Show selected details
+    const selectedDetails = document.getElementById(`details-${radio.value}`);
+    if (selectedDetails) {
+        selectedDetails.style.display = 'block';
+        // Add active class for styling
+        radio.closest('.payment-option').classList.add('selected');
+    }
 }
 
 // Populate Review Step
@@ -156,7 +216,11 @@ function placeOrder() {
     }
     
     // Add payment method
+    // Add payment method and info
     orderData.append('payment_method', formData.payment.method);
+    if (formData.payment.info) {
+        orderData.append('payment_info', formData.payment.info);
+    }
     
     // Submit to backend
     fetch('cart.php', {
@@ -195,4 +259,10 @@ function placeOrder() {
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Checkout page loaded');
+    
+    // Initialize Payment Details
+    const checkedPayment = document.querySelector('input[name="payment_method"]:checked');
+    if (checkedPayment) {
+        togglePaymentDetails(checkedPayment);
+    }
 });

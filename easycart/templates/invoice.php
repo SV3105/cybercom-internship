@@ -72,6 +72,12 @@
                     <span>Tax (GST 18%)</span>
                     <span>₹<?php echo number_format($order['tax'], 2); ?></span>
                 </div>
+                <?php if (!empty($order['discount']) && $order['discount'] > 0): ?>
+                <div class="summary-row" style="color: #16a34a;">
+                    <span>Discount <?php echo $order['coupon'] ? '('.$order['coupon'].')' : ''; ?></span>
+                    <span>- ₹<?php echo number_format($order['discount'], 2); ?></span>
+                </div>
+                <?php endif; ?>
                 <div class="summary-row">
                     <span>Shipping</span>
                     <span>₹<?php echo number_format($order['shipping'], 2); ?></span>

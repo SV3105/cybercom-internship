@@ -34,7 +34,9 @@ if ($order_id) {
                 'total' => $orderData['grand_total'],
                 'subtotal' => $orderData['subtotal'],
                 'tax' => $orderData['tax_amount'],
-                'shipping' => $orderData['shipping_amount']
+                'shipping' => $orderData['shipping_amount'],
+                'discount' => $orderData['discount_amount'] ?? 0,
+                'coupon' => $orderData['coupon_code'] ?? ''
             ];
 
             foreach ($items as $item) {

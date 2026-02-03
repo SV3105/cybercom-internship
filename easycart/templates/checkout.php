@@ -74,49 +74,69 @@
                 <h2>Payment Method</h2>
                 <form id="paymentForm" class="checkout-form">
                     <div class="payment-methods">
-                        <label class="payment-option">
-                            <input type="radio" name="payment_method" value="cod" checked>
-                            <div class="payment-card">
-                                <i class="fas fa-money-bill-wave"></i>
-                                <div>
-                                    <strong>Cash on Delivery</strong>
-                                    <p>Pay when you receive</p>
+                        <!-- COD -->
+                        <div class="payment-method-group">
+                            <label class="payment-option">
+                                <input type="radio" name="payment_method" value="cod" checked onchange="togglePaymentDetails(this)">
+                                <div class="payment-card">
+                                    <i class="fas fa-money-bill-wave"></i>
+                                    <div>
+                                        <strong>Cash on Delivery</strong>
+                                        <p>Pay when you receive</p>
+                                    </div>
                                 </div>
+                            </label>
+                            <div class="payment-details" id="details-cod" style="display: block;">
+                                <p class="info-text"><i class="fas fa-info-circle"></i> Pay cash to the delivery agent upon receiving your order.</p>
                             </div>
-                        </label>
+                        </div>
 
-                        <label class="payment-option">
-                            <input type="radio" name="payment_method" value="card">
-                            <div class="payment-card">
-                                <i class="fas fa-credit-card"></i>
-                                <div>
-                                    <strong>Credit / Debit Card</strong>
-                                    <p>Visa, Mastercard, Rupay</p>
+                        <!-- Card -->
+                        <div class="payment-method-group">
+                            <label class="payment-option">
+                                <input type="radio" name="payment_method" value="card" onchange="togglePaymentDetails(this)">
+                                <div class="payment-card">
+                                    <i class="fas fa-credit-card"></i>
+                                    <div>
+                                        <strong>Credit / Debit Card</strong>
+                                        <p>Visa, Mastercard, Rupay</p>
+                                    </div>
+                                </div>
+                            </label>
+                            <div class="payment-details" id="details-card" style="display: none;">
+                                <div class="form-group">
+                                    <label>Card Number</label>
+                                    <div class="input-icon-wrapper">
+                                        <i class="far fa-credit-card"></i>
+                                        <input type="text" placeholder="0000 0000 0000 0000" maxlength="19">
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>Expiry Date</label>
+                                        <div class="input-icon-wrapper">
+                                            <i class="far fa-calendar-alt"></i>
+                                            <input type="text" placeholder="MM/YY" maxlength="5">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>CVV</label>
+                                        <div class="input-icon-wrapper">
+                                            <i class="fas fa-lock"></i>
+                                            <input type="password" placeholder="123" maxlength="3">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Cardholder Name</label>
+                                    <div class="input-icon-wrapper">
+                                        <i class="far fa-user"></i>
+                                        <input type="text" placeholder="Name as on card">
+                                    </div>
                                 </div>
                             </div>
-                        </label>
+                        </div>
 
-                        <label class="payment-option">
-                            <input type="radio" name="payment_method" value="upi">
-                            <div class="payment-card">
-                                <i class="fab fa-google-pay"></i>
-                                <div>
-                                    <strong>UPI</strong>
-                                    <p>Google Pay, PhonePe, Paytm</p>
-                                </div>
-                            </div>
-                        </label>
-
-                        <label class="payment-option">
-                            <input type="radio" name="payment_method" value="netbanking">
-                            <div class="payment-card">
-                                <i class="fas fa-university"></i>
-                                <div>
-                                    <strong>Net Banking</strong>
-                                    <p>All major banks</p>
-                                </div>
-                            </div>
-                        </label>
                     </div>
 
                     <div class="step-actions">

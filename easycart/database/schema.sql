@@ -33,23 +33,12 @@ CREATE TABLE catalog_product_entity (
     is_featured BOOLEAN DEFAULT FALSE,
     rating DECIMAL(3, 2) DEFAULT 0.00, -- Cached average
     review_count INTEGER DEFAULT 0, -- Cached count
+    category_id INTEGER REFERENCES catalog_category_entity(entity_id) ON DELETE SET NULL,
+    brand_id INTEGER REFERENCES catalog_brand_entity(entity_id) ON DELETE SET NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE catalog_product_attribute (
-    attribute_id SERIAL PRIMARY KEY,
-    product_id INTEGER REFERENCES catalog_product_entity(entity_id) ON DELETE CASCADE,
-    attribute_code VARCHAR(255) NOT NULL, -- e.g., 'feature', 'color', 'size'
-    value TEXT
-);
-
-CREATE TABLE catalog_product_image (
-    image_id SERIAL PRIMARY KEY,
-    product_id INTEGER REFERENCES catalog_product_entity(entity_id) ON DELETE CASCADE,
-    image_path VARCHAR(255) NOT NULL,
-    is_thumbnail BOOLEAN DEFAULT FALSE
-);
 
 -- 1.2 Categories
 CREATE TABLE catalog_category_entity (
@@ -61,18 +50,9 @@ CREATE TABLE catalog_category_entity (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE catalog_category_attribute (
-    attribute_id SERIAL PRIMARY KEY,
-    category_id INTEGER REFERENCES catalog_category_entity(entity_id) ON DELETE CASCADE,
-    attribute_code VARCHAR(255) NOT NULL,
-    value TEXT
-);
 
-CREATE TABLE catalog_category_products (
-    id SERIAL PRIMARY KEY,
-    category_id INTEGER REFERENCES catalog_category_entity(entity_id) ON DELETE CASCADE,
-    product_id INTEGER REFERENCES catalog_product_entity(entity_id) ON DELETE CASCADE
-);
+
+
 
 -- 1.3 Brands
 CREATE TABLE catalog_brand_entity (
@@ -82,18 +62,7 @@ CREATE TABLE catalog_brand_entity (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE catalog_brand_attribute (
-    attribute_id SERIAL PRIMARY KEY,
-    brand_id INTEGER REFERENCES catalog_brand_entity(entity_id) ON DELETE CASCADE,
-    attribute_code VARCHAR(255) NOT NULL,
-    value TEXT
-);
 
-CREATE TABLE catalog_brand_products (
-    id SERIAL PRIMARY KEY,
-    brand_id INTEGER REFERENCES catalog_brand_entity(entity_id) ON DELETE CASCADE,
-    product_id INTEGER REFERENCES catalog_product_entity(entity_id) ON DELETE CASCADE
-);
 
 -- ==========================================
 -- 2. Sales Cart System
@@ -132,15 +101,13 @@ CREATE TABLE sales_cart_shipping (
     id SERIAL PRIMARY KEY,
     cart_id INTEGER REFERENCES sales_cart(id) ON DELETE CASCADE,
     method_code VARCHAR(255),
-    carrier_code VARCHAR(255),
     price DECIMAL(12, 2) DEFAULT 0.00
 );
 
 CREATE TABLE sales_cart_payment (
     id SERIAL PRIMARY KEY,
     cart_id INTEGER REFERENCES sales_cart(id) ON DELETE CASCADE,
-    method_code VARCHAR(255),
-    po_number VARCHAR(255)
+    method_code VARCHAR(255)
 );
 
 -- ==========================================
@@ -153,6 +120,8 @@ CREATE TABLE sales_order (
     user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
     status VARCHAR(50) DEFAULT 'pending',
     subtotal DECIMAL(12, 2) DEFAULT 0.00,
+    discount_amount DECIMAL(12, 2) DEFAULT 0.00,
+    coupon_code VARCHAR(50),
     shipping_amount DECIMAL(12, 2) DEFAULT 0.00,
     tax_amount DECIMAL(12, 2) DEFAULT 0.00,
     grand_total DECIMAL(12, 2) DEFAULT 0.00,

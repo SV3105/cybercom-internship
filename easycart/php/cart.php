@@ -283,6 +283,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $city = $_POST['city'] ?? '';
         $postcode = $_POST['postcode'] ?? '';
         $payment_method = $_POST['payment_method'] ?? 'cod';
+        $payment_info = $_POST['payment_info'] ?? null; // Capture payment info JSON
 
         $totals = calculateCartTotals($_SESSION['cart'], $products);
 
@@ -294,14 +295,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             
             // If no ACTIVE cart found by user_id, check by session_id (active or inactive)
             if (!$cart_id) {
-                $stmt = $pdo->prepare("SELECT id, is_active FROM sales_cart WHERE session_id = ? ORDER BY created_at DESC LIMIT 1");
+                $stmt = $pdo->prepare("SELECT id FROM sales_cart WHERE session_id = ? AND is_active = TRUE ORDER BY created_at DESC LIMIT 1");
                 $stmt->execute([session_id()]);
-                $result = $stmt->fetch();
+                $cart_id = $stmt->fetchColumn();
                 
-                if ($result) {
-                    $cart_id = $result['id'];
-                    // Reactivate and link to user if needed
-                    $pdo->prepare("UPDATE sales_cart SET user_id = ?, is_active = TRUE WHERE id = ?")->execute([$user_id, $cart_id]);
+                if ($cart_id) {
+                    // Link to user if needed
+                    $pdo->prepare("UPDATE sales_cart SET user_id = ? WHERE id = ?")->execute([$user_id, $cart_id]);
                 }
             }
             
@@ -332,17 +332,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             // 3. Save Payment to sales_cart_payment
             $pdo->prepare("DELETE FROM sales_cart_payment WHERE cart_id = ?")->execute([$cart_id]);
             $stmtPay = $pdo->prepare("
-                INSERT INTO sales_cart_payment (cart_id, method_code) 
-                VALUES (?, ?)
+                INSERT INTO sales_cart_payment (cart_id, method_code, payment_info) 
+                VALUES (?, ?, ?)
             ");
-            $stmtPay->execute([$cart_id, $payment_method]);
+            $stmtPay->execute([$cart_id, $payment_method, $payment_info]);
             
             // 4. Create Order
             $increment_id = time() . '-' . $user_id; 
+            
+            // Calculate total discount (Smart + Promo)
+            $total_discount = $totals['smart_discount'] + $totals['promo_discount'];
+            $coupon_code = $totals['promo_code'];
+
             $stmtOrder = $pdo->prepare("
                 INSERT INTO sales_order 
-                (increment_id, user_id, status, subtotal, shipping_amount, tax_amount, grand_total, customer_email, created_at) 
-                VALUES (?, ?, 'processing', ?, ?, ?, ?, ?, NOW()) 
+                (increment_id, user_id, status, subtotal, shipping_amount, tax_amount, discount_amount, coupon_code, grand_total, customer_email, created_at) 
+                VALUES (?, ?, 'processing', ?, ?, ?, ?, ?, ?, ?, NOW()) 
                 RETURNING order_id
             ");
             $customer_email = $_SESSION['user']['email'];
@@ -352,6 +357,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 $totals['subtotal'], 
                 $totals['shipping_cost'], 
                 $totals['tax'], 
+                $total_discount,
+                $coupon_code,
                 $totals['total'], 
                 $customer_email
             ]);
@@ -389,16 +396,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             
             // 7. Copy Payment to sales_order_payment
             $stmtOrderPay = $pdo->prepare("
-                INSERT INTO sales_order_payment (order_id, method)
-                SELECT ?, method_code 
+                INSERT INTO sales_order_payment (order_id, method, payment_info)
+                SELECT ?, method_code, payment_info 
                 FROM sales_cart_payment 
                 WHERE cart_id = ?
             ");
             $stmtOrderPay->execute([$order_id, $cart_id]);
             
-            // 8. Deactivate Cart
-            $stmtCloseCart = $pdo->prepare("UPDATE sales_cart SET is_active = FALSE WHERE id = ?");
-            $stmtCloseCart->execute([$cart_id]);
+            // 8. Deactivate cart (keep for history)
+            $pdo->prepare("UPDATE sales_cart SET is_active = FALSE WHERE id = ?")->execute([$cart_id]);
 
             $pdo->commit();
             
