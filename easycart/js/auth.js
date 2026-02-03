@@ -85,23 +85,28 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
-            // usersData provided by PHP globally
-            if (typeof usersData !== 'undefined') {
-                const user = usersData.find(u => u.email.toLowerCase() === email.toLowerCase());
+            // Server-side login
+            const formData = new FormData();
+            formData.append('email', email);
+            formData.append('password', pass);
 
-                if (!user) {
-                    alert('Email not found. Please sign up first.');
-                    return;
+            fetch('loginhandler.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Redirect based on previous page or default to index
+                    window.location.href = '../index.php';
+                } else {
+                    alert(data.message || 'Login failed.');
                 }
-
-                if (user.password !== pass) {
-                    alert('Incorrect password. Please try again.');
-                    return;
-                }
-
-                alert('Login successful! Welcome, ' + user.name);
-                window.location.href = '../index.php';
-            }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred during login.');
+            });
         });
     }
 
@@ -135,7 +140,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const formData = new FormData(signupForm);
             
-            fetch('signup_handler.php', {
+            fetch('signuphandler.php', {
                 method: 'POST',
                 body: formData
             })

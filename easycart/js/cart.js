@@ -135,8 +135,7 @@ function updateSummary(summaryData = null) {
     const shipping = summaryData.shipping;
     const tax = summaryData.tax;
     const total = summaryData.total;
-    // const mrp = summaryData.mrp; // Not used
-    // const discount = summaryData.discount; // Not used
+
     const smartDiscount = summaryData.smart_discount;
     const smartReason = summaryData.reason;
     const promoDiscount = summaryData.promo_discount;

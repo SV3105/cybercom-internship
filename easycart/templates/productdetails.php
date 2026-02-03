@@ -1,36 +1,3 @@
-<?php
-session_start();
-$title = "Product Details - EasyCart";
-$base_path = "../";
-$page = "products";
-$extra_css = "product-details.css?v=" . time();
-$extra_css_2 = "wishlist.css";
-include '../data/products_data.php';
-
-
-// Logic to find product
-$current_product = null;
-if(isset($_GET['id'])) {
-    $p_id = (int)$_GET['id'];
-    foreach($products as $p) {
-        if($p['id'] == $p_id) {
-            $current_product = $p;
-            break;
-        }
-    }
-}
-
-// Handle Not Found
-if(!$current_product) {
-    echo "<h2 style='text-align:center; padding: 5rem;'>Product not found. <a href='products.php'>Return to Shop</a></h2>";
-    exit;
-}
-
-// Update Title to Product Name
-$title = $current_product['title'] . " - EasyCart";
-
-include '../includes/header.php';
-?>
 
     <div class="container">
       <div class="page-content layout-transparent product-detail-container">
@@ -120,7 +87,7 @@ include '../includes/header.php';
       </div>
     </div>
 
-    <script src="../js/product-details.js"></script>
+    <script src="../js/productdetails.js"></script>
     <script>
         const gallery = <?php echo isset($current_product['gallery']) ? json_encode($current_product['gallery']) : "[]"; ?>;
         const basePath = "../images/";
@@ -134,5 +101,3 @@ include '../includes/header.php';
         // but it's better to update the HTML or re-bind. 
         // For now, let's keep it simple and just expose the needed functions/variables.
     </script>
-
-<?php include '../includes/footer.php'; ?>

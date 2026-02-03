@@ -1,35 +1,68 @@
 <?php
+// php/wishlist.php
 session_start();
-$title = "My Wishlist - EasyCart";
-$base_path = "../";
-$page = "wishlist";
-$extra_css = "wishlist.css";
-include '../data/products_data.php';
+require_once '../includes/db.php';
+require_once '../data/productsdata.php'; // Needed for product details display
 
 // --- WISHLIST LOGIC ---
+
+// 1. Determine User
+$user_id = isset($_SESSION['user']['id']) ? $_SESSION['user']['id'] : null;
+
+// Initialize session wishlist if needed (fallback for guest)
 if (!isset($_SESSION['wishlist'])) {
     $_SESSION['wishlist'] = [];
 }
 
+// 2. Handle AJAX Actions (Add/Remove)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     $p_id = isset($_POST['product_id']) ? (int)$_POST['product_id'] : 0;
     
     if ($p_id > 0) {
-        if ($_POST['action'] === 'add') {
+        $action = $_POST['action'];
+
+        // SCENARIO A: Logged In -> Use DB
+        if ($user_id) {
+            try {
+                if ($action === 'add') {
+                    // UPSERT logic: Insert if not exists
+                    $stmt = $pdo->prepare("INSERT INTO wishlist (user_id, product_id) VALUES (?, ?) ON CONFLICT DO NOTHING");
+                    $stmt->execute([$user_id, $p_id]);
+                } elseif ($action === 'remove') {
+                    $stmt = $pdo->prepare("DELETE FROM wishlist WHERE user_id = ? AND product_id = ?");
+                    $stmt->execute([$user_id, $p_id]);
+                }
+            } catch (PDOException $e) {
+                // Log error
+            }
+        } 
+        
+        // SCENARIO B: Guest -> Use Session (Mirrored even if logged in for immediate UI responsiveness if desirable, but let's keep separate)
+        // Actually, let's keep SESSION in sync for simple checking in views
+        if ($action === 'add') {
             if (!in_array($p_id, $_SESSION['wishlist'])) {
                 $_SESSION['wishlist'][] = $p_id;
             }
-        } elseif ($_POST['action'] === 'remove') {
+        } elseif ($action === 'remove') {
             if (($key = array_search($p_id, $_SESSION['wishlist'])) !== false) {
                 unset($_SESSION['wishlist'][$key]);
-                $_SESSION['wishlist'] = array_values($_SESSION['wishlist']); // Re-index
+                $_SESSION['wishlist'] = array_values($_SESSION['wishlist']);
             }
         }
     }
 
     if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
         header('Content-Type: application/json');
-        echo json_encode(['success' => true, 'count' => count($_SESSION['wishlist'])]);
+        
+        // Return accurate count
+        $count = count($_SESSION['wishlist']);
+        if ($user_id) {
+            $stmt = $pdo->prepare("SELECT COUNT(*) FROM wishlist WHERE user_id = ?");
+            $stmt->execute([$user_id]);
+            $count = $stmt->fetchColumn();
+        }
+        
+        echo json_encode(['success' => true, 'count' => $count]);
         exit;
     }
     
@@ -37,61 +70,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     exit;
 }
 
+// 3. Page Load: Sync DB to Session if logged in (so templates see it)
+if ($user_id) {
+    try {
+        $stmt = $pdo->prepare("SELECT product_id FROM wishlist WHERE user_id = ?");
+        $stmt->execute([$user_id]);
+        $db_wishlist = $stmt->fetchAll(PDO::FETCH_COLUMN);
+        
+        $_SESSION['wishlist'] = $db_wishlist; // Override session with valid DB data
+    } catch (PDOException $e) {
+        // Fallback
+    }
+}
+
+$title = "My Wishlist - EasyCart";
+$base_path = "../";
+$page = "wishlist";
+$extra_css = "wishlist.css";
+
 include '../includes/header.php';
 ?>
 
-<div class="container">
-    <div class="page-content">
-        <h1 class="page-title">My Wishlist</h1>
-        
-        <div class="wishlist-grid">
-            <?php
-            $wishlist_empty = true;
-            if (!empty($_SESSION['wishlist'])) {
-                foreach($_SESSION['wishlist'] as $p_id):
-                    $item = null;
-                    foreach($products as $p) {
-                        if($p['id'] == $p_id) {
-                            $item = $p;
-                            break;
-                        }
-                    }
-                    if($item):
-                        $wishlist_empty = false;
-            ?>
-            <div class="product-card wishlist-card" data-id="<?php echo $p_id; ?>">
-                <button class="btn-wishlist-remove" onclick="toggleWishlist(<?php echo $p_id; ?>, this)">
-                    <i class="fas fa-times"></i>
-                </button>
-                <div class="product-image-container">
-                    <img src="../images/<?php echo $item['image']; ?>" alt="<?php echo $item['title']; ?>">
-                </div>
-                <h3><?php echo $item['title']; ?></h3>
-                <p class="price">₹<?php echo $item['price']; ?></p>
-                
-                <div class="wishlist-actions">
-                    <a href="product-details.php?id=<?php echo $p_id; ?>" class="btn-view-details-pill">View Details</a>
-                    <div class="quick-add-container">
-                        <button class="btn btn-quick-add" onclick="updateQuickQty(<?php echo $p_id; ?>, 1)">
-                            <i class="fas fa-cart-plus"></i> Add to Cart
-                        </button>
-                    </div>
-                </div>
-            </div>
-            <?php endif; endforeach; } ?>
-            
-            <?php if ($wishlist_empty): ?>
-                <div class="no-results" style="grid-column: 1/-1; display:block; text-align:center; padding: 4rem 0;">
-                    <i class="far fa-heart" style="font-size: 4rem; color: #ddd; margin-bottom: 1.5rem;"></i>
-                    <p>Your wishlist is empty.</p>
-                    <a href="products.php" class="btn" style="margin-top: 1.5rem;">Discover Products</a>
-                </div>
-            <?php endif; ?>
-        </div>
-    </div>
-</div>
-
-
-<script src="../js/products.js"></script>
+<?php include '../templates/wishlist.php'; ?>
 
 <?php include '../includes/footer.php'; ?>
