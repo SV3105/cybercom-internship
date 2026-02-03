@@ -62,24 +62,22 @@
 
                     <div class="profile-section-card">
                         <h3><i class="fas fa-history"></i> Recent Activity</h3>
-                        <div class="order-summary-item">
-                            <div class="order-summary-icon">
-                                <i class="fas fa-shopping-bag"></i>
+                        <?php if (!empty($recent_orders)): ?>
+                            <?php foreach($recent_orders as $order): ?>
+                            <div class="order-summary-item" onclick="window.location.href='invoice.php?id=<?php echo $order['order_id']; ?>'" style="cursor: pointer;">
+                                <div class="order-summary-icon">
+                                    <i class="fas fa-shopping-bag"></i>
+                                </div>
+                                <div class="order-summary-info">
+                                    <h4>Order #<?php echo htmlspecialchars($order['increment_id']); ?></h4>
+                                    <p>Placed on <?php echo date('M d, Y', strtotime($order['created_at'])); ?> • ₹<?php echo number_format($order['grand_total'], 2); ?></p>
+                                    <span class="status-badge status-<?php echo strtolower($order['status']); ?>" style="font-size: 0.75rem; padding: 2px 6px; border-radius: 4px; background: #eee;"><?php echo ucfirst($order['status']); ?></span>
+                                </div>
                             </div>
-                            <div class="order-summary-info">
-                                <h4>Order #12345</h4>
-                                <p>Placed on Jan 25, 2024 • ₹2,999</p>
-                            </div>
-                        </div>
-                        <div class="order-summary-item">
-                            <div class="order-summary-icon">
-                                <i class="fas fa-star" style="color: #fbbf24; background: #fffbeb;"></i>
-                            </div>
-                            <div class="order-summary-info">
-                                <h4>Left a Review</h4>
-                                <p>For "Ultra Boost 5.0" • 5 Stars</p>
-                            </div>
-                        </div>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <p style="color: #666; font-style: italic;">No recent orders found.</p>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>

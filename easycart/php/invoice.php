@@ -7,9 +7,13 @@ $order = null;
 
 if ($order_id) {
     try {
-        // 1. Fetch Order Details (Join with User for legacy, but we should use order address from sales_order_address if available)
-        // For now, assuming basic user linkage or direct stored fields
-        $stmt = $pdo->prepare("SELECT * FROM sales_order WHERE order_id = ?");
+        // 1. Fetch Order Details (Join with Users to get name)
+        $stmt = $pdo->prepare("
+            SELECT o.*, u.name as customer_name 
+            FROM sales_order o
+            LEFT JOIN users u ON o.user_id = u.id
+            WHERE o.order_id = ?
+        ");
         $stmt->execute([$order_id]);
         $orderData = $stmt->fetch();
 
@@ -29,7 +33,8 @@ if ($order_id) {
                 'billing_email' => $orderData['customer_email'] ?? '',
                 'total' => $orderData['grand_total'],
                 'subtotal' => $orderData['subtotal'],
-                'tax' => $orderData['tax_amount']
+                'tax' => $orderData['tax_amount'],
+                'shipping' => $orderData['shipping_amount']
             ];
 
             foreach ($items as $item) {

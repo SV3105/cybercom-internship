@@ -66,19 +66,19 @@
             <div class="summary-table">
                 <div class="summary-row">
                     <span>Subtotal</span>
-                    <span>₹<?php echo number_format($subtotal); ?></span>
+                    <span>₹<?php echo number_format($order['subtotal'], 2); ?></span>
                 </div>
                 <div class="summary-row">
                     <span>Tax (GST 18%)</span>
-                    <span>₹<?php echo number_format($subtotal * 0.18); ?></span>
+                    <span>₹<?php echo number_format($order['tax'], 2); ?></span>
                 </div>
                 <div class="summary-row">
                     <span>Shipping</span>
-                    <span>Free</span>
+                    <span>₹<?php echo number_format($order['shipping'], 2); ?></span>
                 </div>
                 <div class="summary-row total">
                     <span>Grand Total</span>
-                    <span>₹<?php echo number_format($subtotal + ($subtotal * 0.18)); ?></span>
+                    <span>₹<?php echo number_format($order['total'], 2); ?></span>
                 </div>
             </div>
         </div>

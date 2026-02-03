@@ -334,8 +334,31 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
+            // Send order to server
             alert('Order placed successfully! Redirecting to orders...');
-            window.location.href = 'orders.php';
+            
+            const formData = new FormData();
+            formData.append('action', 'checkout');
+            // We could append other details like address here if we wanted to save them to the order table directly
+            // For now, the PHP relies on Session items, which is fine.
+            
+            fetch('cart.php', {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = data.redirect || 'orders.php';
+                } else {
+                    alert('Order Failed: ' + data.message);
+                }
+            })
+            .catch(err => {
+                console.error('Checkout error:', err);
+                alert('System error occurred during checkout.');
+            });
         });
     }
 });

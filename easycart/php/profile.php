@@ -23,8 +23,20 @@ try {
         header("Location: auth.php");
         exit;
     }
-} catch (PDOException $e) {
+    }
+ catch (PDOException $e) {
     die("Error fetching profile: " . $e->getMessage());
+}
+
+// 2. Fetch Recent Orders (Limit 5)
+$recent_orders = [];
+try {
+    $stmtOrders = $pdo->prepare("SELECT * FROM sales_order WHERE user_id = ? ORDER BY created_at DESC LIMIT 5");
+    $stmtOrders->execute([$user_id]);
+    $recent_orders = $stmtOrders->fetchAll();
+} catch (PDOException $e) {
+    // Fail silently for orders, just empty list
+    error_log("Profile Orders Error: " . $e->getMessage());
 }
 
 // 2. Handle Profile Update

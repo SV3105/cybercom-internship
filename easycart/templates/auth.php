@@ -43,6 +43,12 @@
                         <input type="email" id="signupEmail" name="email" placeholder="Email" required>
                     </div>
                     <div class="form-group">
+                        <input type="tel" id="signupPhone" name="phone" placeholder="Phone Number" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="text" id="signupLocation" name="location" placeholder="City/Location" required>
+                    </div>
+                    <div class="form-group">
                         <input type="password" id="signupPass" name="password" placeholder="Password" required>
                         <i class="fas fa-eye toggle-password" onclick="togglePassword('signupPass', this)"></i>
                     </div>

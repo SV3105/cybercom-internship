@@ -2,58 +2,180 @@
 // php/cart.php
 session_start();
 require_once '../includes/db.php';
-require_once '../data/productsdata.php'; // This now fetches from DB
+require_once '../data/productsdata.php';
 
 $title = "Shopping Cart - EasyCart";
 $base_path = "../";
 $page = "cart";
 $extra_css = "cart.css";
 
+// --- PERSISTENT CART FUNCTIONS ---
+// --- PERSISTENT CART FUNCTIONS ---
+function syncCartToDb($user_id, $cart, $session_id_val) {
+    global $pdo;
+    try {
+        $cart_id = false;
+        
+        // 1. Get or Create Active Cart
+        if ($user_id) {
+            // Logged in: Match by User ID
+            $stmt = $pdo->prepare("SELECT id FROM sales_cart WHERE user_id = ? AND is_active = TRUE");
+            $stmt->execute([$user_id]);
+            $cart_id = $stmt->fetchColumn();
+            
+            // If we found a cart, update its session_id to current one (handling device switches)
+            if ($cart_id) {
+                $pdo->prepare("UPDATE sales_cart SET session_id = ? WHERE id = ?")->execute([$session_id_val, $cart_id]);
+            }
+        } else {
+            // Guest: Match by Session ID
+            $stmt = $pdo->prepare("SELECT id FROM sales_cart WHERE session_id = ? AND is_active = TRUE AND user_id IS NULL");
+            $stmt->execute([$session_id_val]);
+            $cart_id = $stmt->fetchColumn();
+        }
+
+        if (!$cart_id) {
+            if (empty($cart)) return; // Don't create empty cart record
+            
+            if ($user_id) {
+                $stmtCreate = $pdo->prepare("INSERT INTO sales_cart (user_id, session_id, is_active, created_at) VALUES (?, ?, TRUE, NOW()) RETURNING id");
+                $stmtCreate->execute([$user_id, $session_id_val]);
+            } else {
+                $stmtCreate = $pdo->prepare("INSERT INTO sales_cart (session_id, is_active, created_at) VALUES (?, TRUE, NOW()) RETURNING id");
+                $stmtCreate->execute([$session_id_val]);
+            }
+            $cart_id = $stmtCreate->fetchColumn();
+        } 
+
+        // 2. Sync Items & Calculate Total
+        $pdo->prepare("DELETE FROM sales_cart_products WHERE cart_id = ?")->execute([$cart_id]);
+
+        $calculated_total = 0.00;
+
+        if (!empty($cart)) {
+            $stmtInsert = $pdo->prepare("INSERT INTO sales_cart_products (cart_id, product_id, quantity, price) VALUES (?, ?, ?, ?)");
+            $stmtPrice = $pdo->prepare("SELECT price FROM catalog_product_entity WHERE entity_id = ?");
+            
+            foreach ($cart as $p_id => $qty) {
+                 if ($qty > 0) {
+                    $stmtPrice->execute([$p_id]);
+                    $price = $stmtPrice->fetchColumn();
+                    if ($price !== false) {
+                        $stmtInsert->execute([$cart_id, $p_id, $qty, $price]);
+                        $calculated_total += ($price * $qty);
+                    }
+                 }
+            }
+        }
+        
+        // 3. Update Grand Total in sales_cart
+        // Note: This is raw product total. Real grand total often includes tax/shipping which are calced on fly or checkout.
+        // For cart table, usually saving the subtotal is fine, or we can use our calculation function if needed.
+        // For now, let's save the sum of item totals as 'grand_total' placeholder, or update schema to have subtotal.
+        // Using existing schema 'grand_total'.
+        $pdo->prepare("UPDATE sales_cart SET grand_total = ? WHERE id = ?")->execute([$calculated_total, $cart_id]);
+
+    } catch (PDOException $e) {
+        error_log("Cart Sync Error: " . $e->getMessage());
+    }
+}
+
+function loadCartFromDb($user_id) {
+    global $pdo;
+    $db_cart = [];
+    try {
+        $stmt = $pdo->prepare("
+            SELECT p.product_id, p.quantity 
+            FROM sales_cart_products p
+            JOIN sales_cart c ON p.cart_id = c.id
+            WHERE c.user_id = ? AND c.is_active = TRUE
+        ");
+        $stmt->execute([$user_id]);
+        while ($row = $stmt->fetch()) {
+            $db_cart[$row['product_id']] = $row['quantity'];
+        }
+    } catch (PDOException $e) {
+        error_log("Cart Load Error: " . $e->getMessage());
+    }
+    return $db_cart;
+}
+
 // 1. Initialize Cart
 if (!isset($_SESSION['cart'])) {
     $_SESSION['cart'] = [];
 }
-if (!isset($_SESSION['applied_promo'])) {
-    $_SESSION['applied_promo'] = null;
+
+// --- SYNC ON LOAD (If Logged In) ---
+if (isset($_SESSION['user'])) {
+    $user_id = $_SESSION['user']['id'];
+    
+    // Load DB cart
+    $db_cart = loadCartFromDb($user_id);
+    
+    // Merge Logic:
+    // If session has items and DB has items, merge them?
+    // Or just prefer DB?
+    // Let's MERGE: If session has item, keep max qty.
+    // Actually, widespread standard: loading valid user overrides session, or merges.
+    // Let's merge: Add session items to DB items.
+    
+    $merged = $db_cart;
+    foreach ($_SESSION['cart'] as $pid => $qty) {
+        if (isset($merged[$pid])) {
+             // If already in DB, maybe keep the DB version or the Session version?
+             // Let's assume Session is "fresher" if they just added something before logging in.
+             // But usually on page load we just want to see our saved cart.
+             
+             // Simplest: If session is explicitly modified recently, it wins.
+             // But here we are just loading. 
+             // Logic: DB + Session.
+             $merged[$pid] = $qty; // Overwrite DB with Session (current active)
+        } else {
+             $merged[$pid] = $qty;
+        }
+    }
+    
+    // However, we want to AVOID re-syncing on every page load if nothing changed.
+    // Simple approach: $_SESSION['cart'] is master.
+    // Only fetch from DB if session is empty (fresh login)?
+    // User requested "connect tables".
+    
+    // Let's do this: 
+    // If this is the FIRST load after login (we can't easily detect without a flag),
+    // Or simply always load DB array if session is empty.
+    
+    if (empty($_SESSION['cart']) && !empty($db_cart)) {
+        $_SESSION['cart'] = $db_cart;
+    }
+    // If session is NOT empty, we assume it's the latest state and we sync IT to DB below.
 }
 
 /**
- * Centralized Cart Calculation Logic.
- * Recalculates Subtotal, Shipping, Tax, and Total based on current cart state.
+ * [calculateCartTotals function remains same - omitted for brevity in thought process, but included in file write]
  */
 function calculateCartTotals($cart_items, $products_data) {
-    // Note: $products_data is now our DB-driven array
-    $subtotal = 0;
-    
-    // Calculate Subtotal
+     $subtotal = 0;
     foreach($cart_items as $p_id => $qty) {
         foreach($products_data as $p) {
             if($p['id'] == $p_id) {
-                // Ensure price is numeric float
                 $price_val = (float)str_replace(',', '', $p['price']);
                 $subtotal += $price_val * $qty;
                 break;
             }
         }
     }
-
-    // --- Shipping Rules ---
+    // ... Shipping & Discount Logic Copy ...
     $shipping_options = [
         'standard' => 40,
         'express' => min(80, $subtotal * 0.10),
         'white_glove' => min(150, $subtotal * 0.05),
         'freight' => max(250, $subtotal * 0.03)
     ];
-
-    // Determine Selected Shipping Method
     $selected_method = isset($_SESSION['shipping_method']) ? $_SESSION['shipping_method'] : null;
-
     if ($selected_method === null) {
-        // Default Logic
         $selected_method = ($subtotal <= 300) ? 'express' : 'freight';
         $_SESSION['shipping_method'] = $selected_method;
     } else {
-        // Validation Logic
         if ($subtotal <= 300) {
             if ($selected_method !== 'express') {
                  $selected_method = 'express';
@@ -66,30 +188,22 @@ function calculateCartTotals($cart_items, $products_data) {
             }
         }
     }
-
     $shipping_cost = isset($shipping_options[$selected_method]) ? $shipping_options[$selected_method] : 40;
-    
     if (empty($cart_items)) {
         $shipping_cost = 0;
         $shipping_options = array_map(function() { return 0; }, $shipping_options);
     }
-
-    // --- Smart Discount ---
     $smart_discount = 0;
     $reason = "";
     $item_count = array_sum($cart_items);
-
     if ($item_count > 0) {
         $discount_percent = min($item_count, 100); 
         $smart_discount = $subtotal * ($discount_percent / 100);
         $reason = "Quantity Discount ({$discount_percent}% off)";
     }
-
-    // --- Promo Code ---
     $promo_discount = 0;
     $promo_code = isset($_SESSION['applied_promo']) ? $_SESSION['applied_promo'] : null;
     $promo_message = "";
-
     if ($promo_code) {
         $allowed_codes = ['SAVE5', 'SAVE10', 'SAVE15', 'SAVE20'];
         if (in_array($promo_code, $allowed_codes)) {
@@ -97,21 +211,15 @@ function calculateCartTotals($cart_items, $products_data) {
              $base_for_promo = $subtotal + $shipping_cost;
              $promo_discount = $base_for_promo * ($percent / 100);
              $promo_message = "{$promo_code} Applied ({$percent}% off)";
-             
              if ($promo_discount > 0) {
                  $smart_discount = 0;
                  $reason = ""; 
              }
         }
     }
-
-    // Tax (18%)
     $tax = ($subtotal - $smart_discount + $shipping_cost) * 0.18;
-
-    // Grand Total
     $total = ($subtotal - $smart_discount) + $shipping_cost + $tax - $promo_discount;
     $total = max(0, $total);
-
     return [
         'subtotal' => $subtotal,
         'shipping_cost' => $shipping_cost,
@@ -131,16 +239,12 @@ function calculateCartTotals($cart_items, $products_data) {
 // 2. Handle POST Actions
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     
-    // Calculate current totals first
-    $totals = calculateCartTotals($_SESSION['cart'], $products);
     $p_id = isset($_POST['product_id']) ? (int)$_POST['product_id'] : 0;
     
     // --- CHECKOUT LOGIC ---
     if ($_POST['action'] === 'checkout') {
-        
-        // 1. Validate User
+        // [Existing Checkout Logic]
         if (!isset($_SESSION['user'])) {
-             // Return JSON error or redirect
              if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
                  echo json_encode(['success' => false, 'message' => 'Please login to checkout.']);
                  exit;
@@ -149,10 +253,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                  exit;
              }
         }
-        
         $user_id = $_SESSION['user']['id'];
-        
-        // 2. Validate Cart
         if(empty($_SESSION['cart'])) {
              if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
                  echo json_encode(['success' => false, 'message' => 'Cart is empty.']);
@@ -162,44 +263,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
              exit;
         }
 
+        $totals = calculateCartTotals($_SESSION['cart'], $products);
+
         try {
             $pdo->beginTransaction();
-
-            // 3. Create Order
-            // Use time() as simple increment_id for now, or use UUID
             $increment_id = time() . '-' . $user_id; 
             
-            $stmtOrder = $pdo->prepare("
-                INSERT INTO sales_order 
-                (increment_id, user_id, status, subtotal, shipping_amount, tax_amount, grand_total, customer_email, created_at)
-                VALUES (?, ?, 'processing', ?, ?, ?, ?, ?, NOW())
-                RETURNING order_id
-            ");
-            
-            // Assuming customer email from session
+            $stmtOrder = $pdo->prepare("INSERT INTO sales_order (increment_id, user_id, status, subtotal, shipping_amount, tax_amount, grand_total, customer_email, created_at) VALUES (?, ?, 'processing', ?, ?, ?, ?, ?, NOW()) RETURNING order_id");
             $customer_email = $_SESSION['user']['email'];
-            
-            $stmtOrder->execute([
-                $increment_id,
-                $user_id,
-                $totals['subtotal'],
-                $totals['shipping_cost'],
-                $totals['tax'],
-                $totals['total'],
-                $customer_email
-            ]);
-            
+            $stmtOrder->execute([$increment_id, $user_id, $totals['subtotal'], $totals['shipping_cost'], $totals['tax'], $totals['total'], $customer_email]);
             $order_id = $stmtOrder->fetchColumn();
 
-            // 4. Create Order Items
-            $stmtItem = $pdo->prepare("
-                INSERT INTO sales_order_products 
-                (order_id, product_id, sku, name, price, quantity, total_price)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-            ");
-
+            $stmtItem = $pdo->prepare("INSERT INTO sales_order_products (order_id, product_id, sku, name, price, quantity, total_price) VALUES (?, ?, ?, ?, ?, ?, ?)");
             foreach($_SESSION['cart'] as $pid => $qty) {
-                 // Find product data
                  $product = null;
                  foreach($products as $p) {
                      if($p['id'] == $pid) {
@@ -207,33 +283,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                          break;
                      }
                  }
-                 
                  if ($product) {
                      $price = (float)str_replace(',', '', $product['price']);
                      $total_price = $price * $qty;
-                     // Generate dummy SKU if not present or DB has it
                      $sku = 'SKU-' . $pid; 
-                     
-                     $stmtItem->execute([
-                         $order_id,
-                         $pid,
-                         $sku,
-                         $product['title'],
-                         $price,
-                         $qty,
-                         $total_price
-                     ]);
+                     $stmtItem->execute([$order_id, $pid, $sku, $product['title'], $price, $qty, $total_price]);
                  }
             }
             
+            // --- CLOSE DB CART ON CHECKOUT ---
+            $stmtCloseCart = $pdo->prepare("UPDATE sales_cart SET is_active = FALSE WHERE user_id = ? AND is_active = TRUE");
+            $stmtCloseCart->execute([$user_id]);
+
             $pdo->commit();
             
-            // 5. Clear Cart
             $_SESSION['cart'] = [];
             unset($_SESSION['shipping_method']);
             unset($_SESSION['applied_promo']);
             
-            // 6. Response
             if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
                 echo json_encode(['success' => true, 'redirect' => 'orders.php']);
                 exit;
@@ -248,13 +315,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 echo json_encode(['success' => false, 'message' => 'Order failed: ' . $e->getMessage()]);
                 exit;
             }
-            // Log error
             die("Order creation failed");
         }
     }
-    
-    // --- OTHER ACTIONS (QTY, REMOVE, PROMO) ---
-    // (Existing Logic with Session Only for now)
+    // --- UPDATES ---
     elseif ($_POST['action'] === 'update_qty' && $p_id > 0) {
         if (isset($_POST['qty'])) {
             $new_qty = (int)$_POST['qty'];
@@ -266,19 +330,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             }
             $_SESSION['cart'][$p_id] += $change;
         }
-        
         if (isset($_SESSION['cart'][$p_id]) && $_SESSION['cart'][$p_id] <= 0) {
             unset($_SESSION['cart'][$p_id]);
-            if (empty($_SESSION['cart'])) {
-                unset($_SESSION['shipping_method']);
-            }
         }
     } elseif ($_POST['action'] === 'remove' && $p_id > 0) {
         if (isset($_SESSION['cart'][$p_id])) {
             unset($_SESSION['cart'][$p_id]);
-            if (empty($_SESSION['cart'])) {
-                unset($_SESSION['shipping_method']);
-            }
         }
     } elseif ($_POST['action'] === 'set_shipping' && isset($_POST['method'])) {
         $_SESSION['shipping_method'] = $_POST['method'];
@@ -295,15 +352,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
              $_SESSION['applied_promo'] = null;
         }
     }
+    
+    // --- SYNC TO DB AFTER ANY UPDATE ---
+    $current_session_id = session_id(); // Get PHP Session ID
+    if (isset($_SESSION['user'])) {
+        syncCartToDb($_SESSION['user']['id'], $_SESSION['cart'], $current_session_id);
+    } else {
+        // Guest Sync
+        if (!empty($_SESSION['cart'])) {
+             syncCartToDb(null, $_SESSION['cart'], $current_session_id);
+        }
+    }
 
-    // AJAX Response for Updates
+    // AJAX Response
     if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
-        $totals = calculateCartTotals($_SESSION['cart'], $products); // Recalculate
-        
+        $totals = calculateCartTotals($_SESSION['cart'], $products);
         header('Content-Type: application/json');
-        echo json_encode([
-            'success' => true,
-            'summary' => [
+        echo json_encode(['success' => true, 'summary' => [
                 'subtotal' => $totals['subtotal'],
                 'shipping' => $totals['shipping_cost'],
                 'tax' => $totals['tax'],
@@ -315,18 +380,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 'promo_discount' => $totals['promo_discount'],
                 'promo_code' => $totals['promo_code'],
                 'promo_message' => $totals['promo_message']
-            ]
-        ]);
+        ]]);
         exit;
     }
-    
     header("Location: cart.php");
     exit;
 }
-
 include '../includes/header.php';
 ?>
-
 <?php include '../templates/cart.php'; ?>
-
 <?php include '../includes/footer.php'; ?>

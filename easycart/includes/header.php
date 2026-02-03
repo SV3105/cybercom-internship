@@ -36,7 +36,11 @@
                         </span>
                     </a>
                 </li>
-                <li><a href="<?php echo $base_path; ?>php/auth.php" class="<?php echo ($page === 'auth') ? 'active-nav' : ''; ?>">Login / Sign Up</a></li>
+                <?php if(isset($_SESSION['user'])): ?>
+                    <li><a href="<?php echo $base_path; ?>php/logout.php" class="nav-logout-btn">Logout <i class="fas fa-sign-out-alt"></i></a></li>
+                <?php else: ?>
+                    <li><a href="<?php echo $base_path; ?>php/auth.php" class="<?php echo ($page === 'auth') ? 'active-nav' : ''; ?>">Login / Sign Up</a></li>
+                <?php endif; ?>
                 <li><a href="<?php echo $base_path; ?>php/orders.php" class="<?php echo ($page === 'orders') ? 'active-nav' : ''; ?>">Orders</a></li>
                 <li>
                     <a href="<?php echo $base_path; ?>php/wishlist.php" class="<?php echo ($page === 'wishlist') ? 'active-nav' : ''; ?>">

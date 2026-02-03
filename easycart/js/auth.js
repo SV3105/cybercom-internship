@@ -111,8 +111,13 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     if (signupForm) {
+        let isSubmitting = false;
+
         signupForm.addEventListener('submit', function(e) {
             e.preventDefault();
+            
+            if (isSubmitting) return;
+
             const name = document.getElementById('signupName').value;
             const email = document.getElementById('signupEmail').value;
             const pass = document.getElementById('signupPass').value;
@@ -128,6 +133,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
+            // New fields validation
+            const phone = document.getElementById('signupPhone').value;
+            const location = document.getElementById('signupLocation').value;
+
+            if (phone.length < 10) {
+                alert('Please enter a valid phone number.');
+                return;
+            }
+
+            if (location.trim().length < 3) {
+                alert('Please enter your city/location.');
+                return;
+            }
+
             if (pass.length < 6) {
                 alert('Password must be at least 6 characters long.');
                 return;
@@ -137,6 +156,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 alert('Passwords do not match.');
                 return;
             }
+
+            isSubmitting = true;
+            const btn = signupForm.querySelector('button[type="submit"]');
+            const originalText = btn.textContent;
+            btn.textContent = 'Creating Account...';
+            btn.disabled = true;
 
             const formData = new FormData(signupForm);
             
@@ -148,14 +173,25 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(data => {
                 if (data.success) {
                     alert('Signup successful! You can now login.');
-                    location.reload();
+                    // Don't reset isSubmitting here to prevent clicks during reload
+                    window.location.reload(); 
                 } else {
                     alert('Signup failed: ' + data.message);
+                    isSubmitting = false;
+                    btn.textContent = originalText;
+                    btn.disabled = false;
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('An error occurred during signup.');
+                
+                // Only alert error if we didn't just succeed (though response logic handles success above)
+                // If response.json() fails, we land here.
+                alert('An error occurred during signup. Please try again.');
+                
+                isSubmitting = false;
+                btn.textContent = originalText;
+                btn.disabled = false;
             });
         });
     }

@@ -9,6 +9,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name = trim($_POST['name'] ?? '');
     $email = trim($_POST['email'] ?? '');
     $password = $_POST['password'] ?? '';
+    // Capture new fields
+    $phone = trim($_POST['phone'] ?? '');
+    $location = trim($_POST['location'] ?? '');
 
     // Basic validation
     if (empty($name) || empty($email) || empty($password)) {
@@ -29,8 +32,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 
         // Insert new user
-        $stmtInsert = $pdo->prepare("INSERT INTO users (name, email, password) VALUES (?, ?, ?)");
-        if ($stmtInsert->execute([$name, $email, $hashedPassword])) {
+        $stmtInsert = $pdo->prepare("INSERT INTO users (name, email, password, phone, location) VALUES (?, ?, ?, ?, ?)");
+        if ($stmtInsert->execute([$name, $email, $hashedPassword, $phone, $location])) {
             
             // Allow immediate login (optional)
             // Or just return success
