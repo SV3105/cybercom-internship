@@ -1,5 +1,4 @@
--- EasyCart Database Schema (PostgreSQL)
--- Hybrid EAV Structure: Common fields in Entity, dynamic ones in Attribute.
+
 
 -- ==========================================
 -- 0. Dependencies (Users)
@@ -43,7 +42,6 @@ CREATE TABLE catalog_product_entity (
 -- 1.2 Categories
 CREATE TABLE catalog_category_entity (
     entity_id SERIAL PRIMARY KEY,
-    parent_id INTEGER DEFAULT 0, -- 0 for root
     name VARCHAR(255) NOT NULL, -- Added for easier joins
     image VARCHAR(255), -- Added based on data
     slug VARCHAR(255) UNIQUE,
@@ -107,7 +105,8 @@ CREATE TABLE sales_cart_shipping (
 CREATE TABLE sales_cart_payment (
     id SERIAL PRIMARY KEY,
     cart_id INTEGER REFERENCES sales_cart(id) ON DELETE CASCADE,
-    method_code VARCHAR(255)
+    method_code VARCHAR(255),
+    payment_info TEXT
 );
 
 -- ==========================================
@@ -155,7 +154,8 @@ CREATE TABLE sales_order_address (
 CREATE TABLE sales_order_payment (
     id SERIAL PRIMARY KEY,
     order_id INTEGER REFERENCES sales_order(order_id) ON DELETE CASCADE,
-    method VARCHAR(255)
+    method VARCHAR(255),
+    payment_info TEXT
 );
 
 -- ==========================================

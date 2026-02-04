@@ -17,7 +17,10 @@
                 <div class="order-header" style="display: flex; justify-content: space-between; border-bottom: 1px solid #f0f0f0; padding-bottom: 1rem; margin-bottom: 1rem;">
                     <div>
                         <h3 style="margin: 0; font-size: 1.1rem; color: #333;">Order #<?php echo $order['id']; ?></h3>
-                        <p style="margin: 0.25rem 0 0; color: #888; font-size: 0.9rem;"><?php echo $order['date']; ?></p>
+                        <p style="margin: 0.25rem 0 0; color: #888; font-size: 0.9rem;">
+                            <?php echo $order['date']; ?> • 
+                            <i class="fas fa-truck" style="margin-left: 0.5rem;"></i> <?php echo $order['shipping_type']; ?>
+                        </p>
                     </div>
                     <div style="text-align: right;">
                         <span class="order-status status-<?php echo $order['status_code']; ?>" style="display: inline-block; padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.85rem; font-weight: 500; 
@@ -53,12 +56,17 @@
                     <?php endforeach; ?>
                 </div>
                 
-                <div class="order-actions" style="margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid #f0f0f0; display: flex; gap: 1rem;">
-                    <a href="invoice.php?id=<?php echo $order['db_id']; ?>" class="btn-outline" style="padding: 0.5rem 1rem; font-size: 0.9rem; text-decoration: none; border-radius: 6px; border: 1px solid #ddd; color: #555;">View Invoice</a>
-                    <?php if($order['status_code'] == 'delivered'): ?>
-                    <button class="btn-text" style="color: var(--primary); font-weight: 500; background: none; border: none; cursor: pointer;">Write Review</button>
-                    <?php else: ?>
-                    <button class="btn-text" style="color: var(--primary); font-weight: 500; background: none; border: none; cursor: pointer;">Track Order</button>
+                <div class="order-actions" style="margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid #f0f0f0; display: flex; gap: 1rem; flex-wrap: wrap;">
+                    <a href="orderdetails.php?id=<?php echo $order['db_id']; ?>" class="btn-action btn-primary-action" style="background: #4f46e5; color: white; border: none;">
+                        <i class="fas fa-box-open"></i> View Details
+                    </a>
+                    <a href="invoice.php?id=<?php echo $order['db_id']; ?>" class="btn-action btn-outline-primary" target="_blank">
+                        <i class="fas fa-file-invoice"></i> Download Invoice
+                    </a>
+                    <?php if($order['status_code'] != 'delivered'): ?>
+                    <button class="btn-action btn-outline-primary" onclick="alert('Tracking ID: #track-<?php echo $order['id']; ?>\nStatus: <?php echo $order['status']; ?>\n\nYour order is on the way!')">
+                        <i class="fas fa-truck-fast"></i> Track Order
+                    </button>
                     <?php endif; ?>
                 </div>
             </div>

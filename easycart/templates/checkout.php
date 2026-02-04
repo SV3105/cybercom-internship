@@ -77,7 +77,7 @@
                         <!-- COD -->
                         <div class="payment-method-group">
                             <label class="payment-option">
-                                <input type="radio" name="payment_method" value="cod" checked onchange="togglePaymentDetails(this)">
+                                <input type="radio" name="payment_method" value="cash" checked onchange="togglePaymentDetails(this)">
                                 <div class="payment-card">
                                     <i class="fas fa-money-bill-wave"></i>
                                     <div>
@@ -86,7 +86,7 @@
                                     </div>
                                 </div>
                             </label>
-                            <div class="payment-details" id="details-cod" style="display: block;">
+                            <div class="payment-details" id="details-cash" style="display: block;">
                                 <p class="info-text"><i class="fas fa-info-circle"></i> Pay cash to the delivery agent upon receiving your order.</p>
                             </div>
                         </div>

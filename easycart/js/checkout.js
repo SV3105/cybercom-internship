@@ -186,7 +186,7 @@ function populateReview() {
     
     // Payment Review
     const paymentLabels = {
-        'cod': 'Cash on Delivery',
+        'cash': 'Cash on Delivery',
         'card': 'Credit / Debit Card',
         'upi': 'UPI Payment',
         'netbanking': 'Net Banking'

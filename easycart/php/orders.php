@@ -40,6 +40,21 @@ try {
                 'price' => number_format($item['price']) // Format for display
             ];
         }
+        
+        // 3. Get Shipping Method
+        $stmtShipping = $pdo->prepare("SELECT shipping_method FROM sales_order_payment WHERE order_id = ?");
+        $stmtShipping->execute([$orderId]);
+        $shippingData = $stmtShipping->fetch();
+        
+        // Map shipping method to user-friendly labels
+        $shippingLabels = [
+            'standard' => 'Standard Shipping',
+            'express' => 'Express Delivery',
+            'white_glove' => 'White Glove Service',
+            'freight' => 'Freight Shipping'
+        ];
+        $shippingMethod = $shippingData['shipping_method'] ?? 'standard';
+        $shippingType = $shippingLabels[$shippingMethod] ?? 'Standard Shipping';
 
         $orders[] = [
             'id'          => $row['increment_id'] ?? $row['order_id'], // Use Increment ID if available, else PK
@@ -47,6 +62,7 @@ try {
             'date'        => date("F j, Y", strtotime($row['created_at'])),
             'status'      => ucfirst($row['status']),
             'status_code' => strtolower($row['status']),
+            'shipping_type' => $shippingType, // User-friendly shipping label
             'items'       => $formattedItems,
             'total'       => number_format($row['grand_total'], 2)
         ];

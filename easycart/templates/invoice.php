@@ -25,13 +25,17 @@
         <section class="invoice-meta">
             <div class="meta-group">
                 <h4>Billed To</h4>
-                <p>Sneha Vaghela</p>
-                <p style="font-weight: 400; color: #64748b; font-size: 0.9rem;">sneha@example.com<br>Ahmedabad, Gujarat</p>
+                <p><?php echo $order['billing_name']; ?></p>
+                <p style="font-weight: 400; color: #64748b; font-size: 0.9rem;">
+                    <?php echo $order['billing_email']; ?><br>
+                    <?php echo $order['billing_address']; ?><br>
+                    <?php echo $order['billing_phone']; ?>
+                </p>
             </div>
             <div class="meta-group" style="text-align: right;">
                 <h4>Payment Method</h4>
-                <p>Credit Card (Visa)</p>
-                <p style="font-weight: 400; color: #64748b; font-size: 0.9rem;">Status: Paid</p>
+                <p><?php echo $order['payment_method']; ?></p>
+                
             </div>
         </section>
 

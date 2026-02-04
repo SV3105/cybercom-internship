@@ -4,13 +4,21 @@ session_start();
 require_once '../includes/db.php';
 require_once '../data/productsdata.php';
 
+// Restrict cart PAGE access to logged-in users only
+// But allow AJAX requests (add to cart) for guest users
+$isAjaxRequest = isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
+
+if (!isset($_SESSION['user']) && !$isAjaxRequest) {
+    // Guest user trying to access cart page - redirect to login
+    header("Location: auth.php");
+    exit;
+}
+
 $title = "Shopping Cart - EasyCart";
 $base_path = "../";
 $page = "cart";
 $extra_css = "cart.css";
 
-// --- PERSISTENT CART FUNCTIONS ---
-// --- PERSISTENT CART FUNCTIONS ---
 function syncCartToDb($user_id, $cart, $session_id_val) {
     global $pdo;
     try {
@@ -68,11 +76,7 @@ function syncCartToDb($user_id, $cart, $session_id_val) {
             }
         }
         
-        // 3. Update Grand Total in sales_cart
-        // Note: This is raw product total. Real grand total often includes tax/shipping which are calced on fly or checkout.
-        // For cart table, usually saving the subtotal is fine, or we can use our calculation function if needed.
-        // For now, let's save the sum of item totals as 'grand_total' placeholder, or update schema to have subtotal.
-        // Using existing schema 'grand_total'.
+
         $pdo->prepare("UPDATE sales_cart SET grand_total = ? WHERE id = ?")->execute([$calculated_total, $cart_id]);
 
     } catch (PDOException $e) {
@@ -124,42 +128,19 @@ if (isset($_SESSION['user'])) {
     // Load DB cart
     $db_cart = loadCartFromDb($user_id);
     
-    // Merge Logic:
-    // If session has items and DB has items, merge them?
-    // Or just prefer DB?
-    // Let's MERGE: If session has item, keep max qty.
-    // Actually, widespread standard: loading valid user overrides session, or merges.
-    // Let's merge: Add session items to DB items.
-    
     $merged = $db_cart;
     foreach ($_SESSION['cart'] as $pid => $qty) {
         if (isset($merged[$pid])) {
-             // If already in DB, maybe keep the DB version or the Session version?
-             // Let's assume Session is "fresher" if they just added something before logging in.
-             // But usually on page load we just want to see our saved cart.
-             
-             // Simplest: If session is explicitly modified recently, it wins.
-             // But here we are just loading. 
-             // Logic: DB + Session.
              $merged[$pid] = $qty; // Overwrite DB with Session (current active)
         } else {
              $merged[$pid] = $qty;
         }
     }
-    
-    // However, we want to AVOID re-syncing on every page load if nothing changed.
-    // Simple approach: $_SESSION['cart'] is master.
-    // Only fetch from DB if session is empty (fresh login)?
-    // User requested "connect tables".
-    
-    // Let's do this: 
-    // If this is the FIRST load after login (we can't easily detect without a flag),
-    // Or simply always load DB array if session is empty.
-    
+   
     if (empty($_SESSION['cart']) && !empty($db_cart)) {
         $_SESSION['cart'] = $db_cart;
     }
-    // If session is NOT empty, we assume it's the latest state and we sync IT to DB below.
+
 }
 
 /**
@@ -403,6 +384,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             ");
             $stmtOrderPay->execute([$order_id, $cart_id]);
             
+            // 7.5. Copy Shipping Method to sales_order_payment
+            $stmtShipping = $pdo->prepare("
+                UPDATE sales_order_payment 
+                SET shipping_method = (
+                    SELECT method_code FROM sales_cart_shipping WHERE cart_id = ?
+                )
+                WHERE order_id = ?
+            ");
+            $stmtShipping->execute([$cart_id, $order_id]);
+            
             // 8. Deactivate cart (keep for history)
             $pdo->prepare("UPDATE sales_cart SET is_active = FALSE WHERE id = ?")->execute([$cart_id]);
 
@@ -430,24 +421,62 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         }
     }
     // --- UPDATES ---
-    elseif ($_POST['action'] === 'update_qty' && $p_id > 0) {
-        if (isset($_POST['qty'])) {
-            $new_qty = (int)$_POST['qty'];
+    // --- UPDATE QUANTITY (from products page quick add) ---
+    elseif ($_POST['action'] === 'update_qty') {
+        $change = isset($_POST['change']) ? (int)$_POST['change'] : 0;
+        
+        // Get current quantity
+        $current_qty = isset($_SESSION['cart'][$p_id]) ? $_SESSION['cart'][$p_id] : 0;
+        $new_qty = $current_qty + $change;
+        
+        // Ensure quantity is within bounds
+        if ($new_qty > 0) {
             $_SESSION['cart'][$p_id] = $new_qty;
-        } elseif (isset($_POST['change'])) {
-            $change = (int)$_POST['change'];
-            if (!isset($_SESSION['cart'][$p_id])) {
-                $_SESSION['cart'][$p_id] = 0;
-            }
-            $_SESSION['cart'][$p_id] += $change;
-        }
-        if (isset($_SESSION['cart'][$p_id]) && $_SESSION['cart'][$p_id] <= 0) {
+        } else {
             unset($_SESSION['cart'][$p_id]);
         }
-    } elseif ($_POST['action'] === 'remove' && $p_id > 0) {
-        if (isset($_SESSION['cart'][$p_id])) {
+        
+        // SYNC TO DB IMMEDIATELY
+        $user_id = isset($_SESSION['user']['id']) ? $_SESSION['user']['id'] : null;
+        syncCartToDb($user_id, $_SESSION['cart'], session_id());
+
+        $totals = calculateCartTotals($_SESSION['cart'], $products);
+        echo json_encode(['success' => true, 'summary' => [
+            'count' => $totals['item_count'],
+            'subtotal' => $totals['subtotal'],
+            'total' => $totals['total']
+        ]]);
+        exit;
+    }
+    // --- UPDATE QUANTITY ---
+    elseif ($_POST['action'] === 'update') {
+        $qty = (int)$_POST['quantity'];
+        if ($qty > 0) {
+            $_SESSION['cart'][$p_id] = $qty;
+        } else {
             unset($_SESSION['cart'][$p_id]);
         }
+        
+        // SYNC TO DB IMMEDIATELY
+        $user_id = isset($_SESSION['user']['id']) ? $_SESSION['user']['id'] : null;
+        syncCartToDb($user_id, $_SESSION['cart'], session_id());
+
+        $totals = calculateCartTotals($_SESSION['cart'], $products);
+        echo json_encode(['success' => true, 'totals' => $totals]);
+        exit;
+    }
+
+    // --- REMOVE ITEM ---
+    elseif ($_POST['action'] === 'remove') {
+        unset($_SESSION['cart'][$p_id]);
+        
+        // SYNC TO DB IMMEDIATELY
+        $user_id = isset($_SESSION['user']['id']) ? $_SESSION['user']['id'] : null;
+        syncCartToDb($user_id, $_SESSION['cart'], session_id());
+
+        $totals = calculateCartTotals($_SESSION['cart'], $products);
+        echo json_encode(['success' => true, 'totals' => $totals]);
+        exit;
     } elseif ($_POST['action'] === 'set_shipping' && isset($_POST['method'])) {
         $_SESSION['shipping_method'] = $_POST['method'];
     } elseif ($_POST['action'] === 'clear') {

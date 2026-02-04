@@ -23,14 +23,41 @@ if ($order_id) {
             $stmtItems->execute([$order_id]);
             $items = $stmtItems->fetchAll();
 
-             // 3. Prepare Data Object for Template
+             // 3. Fetch Address
+             $stmtAddr = $pdo->prepare("SELECT * FROM sales_order_address WHERE order_id = ? AND address_type = 'shipping'");
+             $stmtAddr->execute([$order_id]);
+             $address = $stmtAddr->fetch();
+
+             // 4. Fetch Payment
+             $stmtPay = $pdo->prepare("SELECT * FROM sales_order_payment WHERE order_id = ?");
+             $stmtPay->execute([$order_id]);
+             $payment = $stmtPay->fetch();
+             
+             // Payment Method Label Map
+             $methodLabels = [
+                 'cash' => 'Cash on Delivery',
+                 'card' => 'Credit / Debit Card',
+                 'upi' => 'UPI',
+                 'netbanking' => 'Net Banking'
+             ];
+             $methodLabel = isset($payment['method']) ? ($methodLabels[$payment['method']] ?? ucfirst($payment['method'])) : 'Unknown';
+
+             // 5. Prepare Data Object for Template
             $order = [
                 'id' => $orderData['increment_id'] ?? $orderData['order_id'],
                 'date' => date("F j, Y, g:i a", strtotime($orderData['created_at'])),
                 'items' => [],
-                // Add billing info if available in sales_order or sales_order_address
-                'billing_name' => $orderData['customer_name'] ?? 'Walk-in Customer', // Should come from order record
-                'billing_email' => $orderData['customer_email'] ?? '',
+                
+                // Dynamic Customer Info
+                'billing_name' => ($address['firstname'] ?? '') . ' ' . ($address['lastname'] ?? ''),
+                'billing_email' => $orderData['customer_email'],
+                'billing_address' => ($address['street'] ?? '') . ', ' . ($address['city'] ?? '') . ', ' . ($address['postcode'] ?? ''),
+                'billing_phone' => $address['telephone'] ?? '',
+                
+                // Dynamic Payment Info
+                'payment_method' => $methodLabel,
+                'payment_status' => ucfirst($orderData['status']) == 'Delivered' ? 'Paid' : (ucfirst($orderData['status']) == 'Processing' ? 'Paid' : 'Pending'), // Simple logic
+                
                 'total' => $orderData['grand_total'],
                 'subtotal' => $orderData['subtotal'],
                 'tax' => $orderData['tax_amount'],
