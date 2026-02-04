@@ -20,11 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $user = $stmt->fetch();
 
         if ($user) {
-            // Verify Password
-            // Note: In a real app we use password_verify(). 
-            // Since migration might have brought in plain text passwords, we handle both (or assume plain for now based on previous code).
-            // MIGRATION NOTE: Since usersdata.php had '123456', we assume plain text for legacy users.
-            // New users from signup_handler should be hashed.
+            
             // Let's implement a hybrid check:
             
             $passwordValid = false;

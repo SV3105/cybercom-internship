@@ -84,6 +84,10 @@
                             <i class="fas fa-heart" style="width: 16px;"></i>
                             <span>My Wishlist</span>
                         </a>
+                        <a href="logout.php" class="profile-nav-link" style="padding: 0.75rem 1rem; border-radius: 8px; text-decoration: none; color: #ef4444; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; transition: all 0.2s; margin-top: 0.5rem; border-top: 1px solid #e2e8f0; padding-top: 1rem;">
+                            <i class="fas fa-sign-out-alt" style="width: 16px;"></i>
+                            <span>Logout</span>
+                        </a>
                     </div>
                 </nav>
             </div>
