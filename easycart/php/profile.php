@@ -35,8 +35,43 @@ try {
     $stmtOrders->execute([$user_id]);
     $recent_orders = $stmtOrders->fetchAll();
 } catch (PDOException $e) {
-    // Fail silently for orders, just empty list
     error_log("Profile Orders Error: " . $e->getMessage());
+}
+
+// 3. Fetch Dashboard Statistics
+$total_orders = 0;
+$total_spent = 0;
+try {
+    // Total orders count
+    $stmtCount = $pdo->prepare("SELECT COUNT(*) as count FROM sales_order WHERE user_id = ?");
+    $stmtCount->execute([$user_id]);
+    $total_orders = $stmtCount->fetch()['count'];
+    
+    // Total amount spent
+    $stmtSum = $pdo->prepare("SELECT SUM(grand_total) as total FROM sales_order WHERE user_id = ?");
+    $stmtSum->execute([$user_id]);
+    $total_spent = $stmtSum->fetch()['total'] ?? 0;
+} catch (PDOException $e) {
+    error_log("Stats Error: " . $e->getMessage());
+}
+
+// 4. Fetch Chart Data (Spending per day)
+$chart_data = [];
+try {
+    // Grouping by date for the chart
+    $stmtChart = $pdo->prepare("
+        SELECT 
+            TO_CHAR(created_at, 'YYYY-MM-DD') as date,
+            SUM(grand_total) as amount
+        FROM sales_order 
+        WHERE user_id = ? 
+        GROUP BY TO_CHAR(created_at, 'YYYY-MM-DD')
+        ORDER BY TO_CHAR(created_at, 'YYYY-MM-DD') ASC
+    ");
+    $stmtChart->execute([$user_id]);
+    $chart_data = $stmtChart->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    error_log("Chart Data Error: " . $e->getMessage());
 }
 
 // 2. Handle Profile Update
@@ -65,6 +100,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     } catch (PDOException $e) {
         // Handle error (e.g., set an error message variable to display)
         $error = "Update failed: " . $e->getMessage();
+    }
+}
+
+// 3. Handle Change Password
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'change_password') {
+    $currentPassword = $_POST['current_password'] ?? '';
+    $newPassword = $_POST['new_password'] ?? '';
+    $confirmPassword = $_POST['confirm_password'] ?? '';
+    
+    // Validate
+    if (empty($currentPassword) || empty($newPassword) || empty($confirmPassword)) {
+        header("Location: profile.php?error=password_empty");
+        exit;
+    }
+    
+    if ($newPassword !== $confirmPassword) {
+        header("Location: profile.php?error=password_mismatch");
+        exit;
+    }
+    
+    if (strlen($newPassword) < 6) {
+        header("Location: profile.php?error=password_short");
+        exit;
+    }
+    
+    // Verify current password
+    if (!password_verify($currentPassword, $user['password'])) {
+        header("Location: profile.php?error=password_incorrect");
+        exit;
+    }
+    
+    // Update password
+    try {
+        $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
+        $stmtPassword = $pdo->prepare("UPDATE users SET password = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?");
+        $stmtPassword->execute([$hashedPassword, $user_id]);
+        
+        header("Location: profile.php?success=password_changed");
+        exit;
+    } catch (PDOException $e) {
+        header("Location: profile.php?error=password_update_failed");
+        exit;
     }
 }
 

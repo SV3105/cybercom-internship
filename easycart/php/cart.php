@@ -362,8 +362,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                  if ($product) {
                      $price = (float)str_replace(',', '', $product['price']);
                      $total_price = $price * $qty;
-                     $sku = 'SKU-' . $pid; 
-                     $stmtItem->execute([$order_id, $pid, $sku, $product['title'], $price, $qty, $total_price]);
+                     $stmtItem->execute([$order_id, $pid, $product['title'], $price, $qty, $total_price]);
                  }
             }
             
