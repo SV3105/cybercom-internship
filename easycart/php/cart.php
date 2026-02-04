@@ -348,8 +348,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             // 5. Insert Order Items
             $stmtItem = $pdo->prepare("
                 INSERT INTO sales_order_products 
-                (order_id, product_id, sku, name, price, quantity, total_price) 
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                (order_id, product_id, name, price, quantity, total_price) 
+                VALUES (?, ?, ?, ?, ?, ?)
             ");
             foreach($_SESSION['cart'] as $pid => $qty) {
                  $product = null;
