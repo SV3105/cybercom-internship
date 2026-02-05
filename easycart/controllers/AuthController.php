@@ -8,6 +8,7 @@ class AuthController {
     public function __construct() {
         global $pdo;
         require_once __DIR__ . '/../models/User.php';
+        //__DIR__ : This is a special PHP "magic constant". It returns the exact folder path of the file currently running.
         $this->userModel = new User($pdo);
     }
     

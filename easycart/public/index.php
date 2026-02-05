@@ -24,7 +24,7 @@ $request_uri = $_SERVER['REQUEST_URI'];
 $request_uri = strtok($request_uri, '?');
 
 // Remove base directory from URI
-$base_dir = '/cybercom-internship-v2/easycart/public/';
+$base_dir = '/cybercom-internship-v2/easycart/';
 define('BASE_URL', $base_dir); // Define global constant for views
 
 $request_uri = str_replace($base_dir, '', $request_uri);
