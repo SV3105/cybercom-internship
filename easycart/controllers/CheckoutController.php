@@ -115,6 +115,24 @@ class CheckoutController {
             'method' => $_POST['payment_method'] ?? 'cod',
             'info' => $_POST['payment_info'] ?? null
         ];
+
+        // 1.5 Server-side Payment Validation
+        if ($payment['method'] === 'card') {
+            $info = json_decode($payment['info'], true);
+            if (!$info || !isset($info['expiry']) || !preg_match('/^(0[1-9]|1[0-2])\/\d{2}$/', $info['expiry'])) {
+                echo json_encode(['success' => false, 'message' => 'Invalid expiry date format (MM/YY).']);
+                exit;
+            }
+            
+            list($month, $year) = explode('/', $info['expiry']);
+            $currentYear = (int)date('y');
+            $currentMonth = (int)date('m');
+            
+            if ((int)$year < $currentYear || ((int)$year === $currentYear && (int)$month < $currentMonth)) {
+                echo json_encode(['success' => false, 'message' => 'The payment card has expired.']);
+                exit;
+            }
+        }
         
         // 2. Recalculate Totals (Secure source of truth)
         $products = $this->productModel->getAllProducts();

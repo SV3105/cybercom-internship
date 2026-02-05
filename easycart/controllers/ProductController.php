@@ -99,7 +99,7 @@ class ProductController {
         // If this is an AJAX request, ONLY output the grid and exit.
         if(isset($_GET['ajax']) && $_GET['ajax'] == '1') {
             $base_path = ''; // Set for AJAX requests too
-            $this->renderProductsGrid($paginated_products, $page_num, $total_pages, $base_path);
+            $this->renderGrid($paginated_products, $page_num, $total_pages, $base_path);
             exit;
         }
         
@@ -118,9 +118,9 @@ class ProductController {
     /**
      * Render products grid (for AJAX)
      */
-    private function renderProductsGrid($items, $page, $total_pages, $base_path = '') {
+    private function renderGrid($items, $page, $total_pages, $base_path = '') {
         // Include the Grid Template
-        require __DIR__ . '/../views/products/productsgrid.php';
+        require __DIR__ . '/../views/products/grid.php';
     }
     
     /**

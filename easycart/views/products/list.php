@@ -16,6 +16,7 @@
 
                         <div class="filter-group">
                             <h3>Categories</h3>
+                            <div class="filter-scroll">
                             <?php 
                             // Use centralized $categories from productsdata.php
                             foreach($categories as $val => $data):
@@ -25,10 +26,12 @@
                                 <span class="checkmark"></span> <?php echo $data['name']; ?>
                             </label>
                             <?php endforeach; ?>
+                            </div>
                         </div>
                     
                         <div class="filter-group">
                             <h3>Brands</h3>
+                            <div class="filter-scroll">
                             <?php 
                             // Use centralized $brands from productsdata.php
                             foreach($brands as $val => $label):
@@ -38,6 +41,7 @@
                                 <span class="checkmark"></span> <?php echo $label; ?>
                             </label>
                             <?php endforeach; ?>
+                            </div>
                         </div>
 
                         <a href="products" class="btn-clear-filters">
@@ -54,7 +58,7 @@
                     <div class="products-grid" id="productGrid">
                     <?php 
                     // Initial Render
-                    $this->renderProductsGrid($paginated_products, $page_num, $total_pages, $base_path);
+                    $this->renderGrid($paginated_products, $page_num, $total_pages, $base_path);
                     ?>
                 </div>
             </div>

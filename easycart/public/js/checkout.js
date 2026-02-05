@@ -133,6 +133,29 @@ function validatePaymentForm() {
                 alert('Please enter a valid Card Number');
                 return false;
             }
+
+            const expiry = document.getElementById('checkoutExpiry').value;
+            if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(expiry)) {
+                alert('Please enter a valid expiry date (MM/YY)');
+                return false;
+            }
+            
+            // Date validation
+            const [month, year] = expiry.split('/').map(n => parseInt(n));
+            const now = new Date();
+            const currentYear = parseInt(now.getFullYear().toString().slice(-2));
+            const currentMonth = now.getMonth() + 1;
+            
+            if (year < currentYear || (year === currentYear && month < currentMonth)) {
+                alert('This card has expired');
+                return false;
+            }
+
+            const cvv = document.getElementById('checkoutCVV').value;
+            if (cvv.length < 3 || isNaN(cvv)) {
+                alert('Please enter a valid 3-digit CVV');
+                return false;
+            }
         }
     }
     
@@ -263,5 +286,17 @@ document.addEventListener('DOMContentLoaded', function() {
     const checkedPayment = document.querySelector('input[name="payment_method"]:checked');
     if (checkedPayment) {
         togglePaymentDetails(checkedPayment);
+    }
+
+    // Expiry Date Auto-format
+    const expiryInput = document.getElementById('checkoutExpiry');
+    if (expiryInput) {
+        expiryInput.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 2) {
+                value = value.substring(0, 2) + '/' + value.substring(2, 4);
+            }
+            e.target.value = value;
+        });
     }
 });
