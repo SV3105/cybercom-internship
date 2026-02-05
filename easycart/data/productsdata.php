@@ -2,7 +2,12 @@
 // data/productsdata.php
 // Simplified to work with main entity tables only
 
-require_once __DIR__ . '/../includes/db.php';
+// Try new config first, fallback to old includes
+if (file_exists(__DIR__ . '/../config/config.php')) {
+    require_once __DIR__ . '/../config/config.php';
+} else {
+    require_once __DIR__ . '/../includes/db.php';
+}
 
 try {
     // 1. Fetch Categories
@@ -57,7 +62,7 @@ try {
         // Process gallery images
         $gallery = [];
         if (!empty($row['gallery_images'])) {
-            $gallery = array_unique(explode(',', $row['gallery_images']));
+            $gallery = array_values(array_unique(explode(',', $row['gallery_images'])));
         } elseif (!empty($row['image'])) {
             $gallery = [$row['image']];
         }
