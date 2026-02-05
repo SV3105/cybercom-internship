@@ -34,6 +34,7 @@ CREATE TABLE catalog_product_entity (
     review_count INTEGER DEFAULT 0, -- Cached count
     category_id INTEGER REFERENCES catalog_category_entity(entity_id) ON DELETE SET NULL,
     brand_id INTEGER REFERENCES catalog_brand_entity(entity_id) ON DELETE SET NULL,
+    stock_qty INTEGER DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

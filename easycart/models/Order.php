@@ -60,14 +60,23 @@ class Order {
             // Let's fetch them here to be safe and get names.
             
             foreach($cart_data as $pid => $qty) {
-                 $stmtProd = $this->pdo->prepare("SELECT name, price FROM catalog_product_entity WHERE entity_id = ?");
+                 $stmtProd = $this->pdo->prepare("SELECT name, sku, price, stock_qty FROM catalog_product_entity WHERE entity_id = ? FOR UPDATE");
                  $stmtProd->execute([$pid]);
                  $product = $stmtProd->fetch();
                  
                  if ($product) {
-                     $price = (float)$product['price']; // Should ideally come from cart snapshot to lock price, but re-fetching current price is standard for simple carts
+                     // Stock Check
+                     if ($product['stock_qty'] < $qty) {
+                         throw new Exception("Insufficient stock for product: " . $product['name']);
+                     }
+                     
+                     // Decrement Stock
+                     $stmtUpdateStock = $this->pdo->prepare("UPDATE catalog_product_entity SET stock_qty = stock_qty - ? WHERE entity_id = ?");
+                     $stmtUpdateStock->execute([$qty, $pid]);
+
+                     $price = (float)$product['price'];
                      $total_price = $price * $qty;
-                     $stmtItem->execute([$order_id, $pid, $product['name'], $price, $qty, $total_price]);
+                     $stmtItem->execute([$order_id, $pid, $product['sku'], $product['name'], $price, $qty, $total_price]);
                  }
             }
             

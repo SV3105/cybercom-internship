@@ -387,3 +387,47 @@
         height: 28px;
     }
 }
+
+/* Button Actions (Refined Hover) */
+.btn-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1.25rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    border: none;
+}
+
+.btn-action i {
+    font-size: 1rem;
+}
+
+.btn-primary-action {
+    background: #4f46e5;
+    color: white !important;
+}
+
+.btn-primary-action:hover {
+    background: #4338ca;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+    color: white !important;
+}
+
+.btn-outline-primary {
+    background: white;
+    border: 1px solid #4f46e5;
+    color: #4f46e5 !important;
+}
+
+.btn-outline-primary:hover {
+    background: #4f46e5;
+    color: white !important; /* Fixed text color on hover */
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2);
+}

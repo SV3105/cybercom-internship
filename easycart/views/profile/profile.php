@@ -168,7 +168,7 @@
                     <?php if (!empty($recent_orders)): ?>
                         <div style="display: grid; gap: 1rem;">
                             <?php foreach($recent_orders as $order): ?>
-                            <div onclick="window.location.href='invoice?id=<?php echo $order['increment_id']; ?>'" style="cursor: pointer; padding: 1.25rem; background: #f8fafc; border-radius: 12px; display: flex; align-items: center; gap: 1rem; transition: all 0.3s; border: 1px solid #e2e8f0;" onmouseover="this.style.background='#f1f5f9'; this.style.borderColor='#cbd5e1';" onmouseout="this.style.background='#f8fafc'; this.style.borderColor='#e2e8f0';">
+                            <div onclick="window.location.href='order-details?id=<?php echo $order['order_id']; ?>'" style="cursor: pointer; padding: 1.25rem; background: #f8fafc; border-radius: 12px; display: flex; align-items: center; gap: 1rem; transition: all 0.3s; border: 1px solid #e2e8f0;" onmouseover="this.style.background='#f1f5f9'; this.style.borderColor='#cbd5e1';" onmouseout="this.style.background='#f8fafc'; this.style.borderColor='#e2e8f0';">
                                 <div style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white;">
                                     <i class="fas fa-shopping-bag" style="font-size: 1.25rem;"></i>
                                 </div>

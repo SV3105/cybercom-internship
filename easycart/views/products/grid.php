@@ -28,6 +28,15 @@
             <?php endif; ?>
             <img src="<?php echo $base_path; ?>images/<?php echo $product['image']; ?>" alt="<?php echo $product['title']; ?>">
         </div>
+        <div class="product-stock-status">
+            <?php if ($product['stock_qty'] <= 0): ?>
+                <span class="stock-badge stock-out"><i class="fas fa-times-circle"></i> Out of Stock</span>
+            <?php elseif ($product['stock_qty'] <= 5): ?>
+                <span class="stock-badge stock-low"><i class="fas fa-exclamation-triangle"></i> Only <?php echo $product['stock_qty']; ?> left</span>
+            <?php else: ?>
+                <span class="stock-badge stock-in"><i class="fas fa-check-circle"></i> In Stock</span>
+            <?php endif; ?>
+        </div>
         <h3><?php echo $product['title']; ?></h3>
         <p class="price">₹<?php echo $product['price']; ?>
             <?php if($product['old_price']): ?>
@@ -36,7 +45,11 @@
         </p>
         
         <div class="quick-add-container">
-            <?php if ($qty > 0): ?>
+            <?php if ($product['stock_qty'] <= 0): ?>
+                <button class="btn btn-quick-add disabled" disabled style="background: #f1f5f9; color: #94a3b8; border-color: #e2e8f0; cursor: not-allowed; opacity: 0.7;">
+                    <i class="fas fa-ban"></i> Out of Stock
+                </button>
+            <?php elseif ($qty > 0): ?>
                 <div class="qty-selector">
                     <button class="btn-qty btn-minus" onclick="updateQuickQty(<?php echo $product['id']; ?>, -1)">-</button>
                     <span class="qty-display"><?php echo $qty; ?></span>

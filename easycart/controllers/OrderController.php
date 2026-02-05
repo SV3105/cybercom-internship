@@ -79,7 +79,7 @@ class OrderController {
 
         $title = "My Orders - EasyCart";
         $page = "orders";
-        $extra_css = "profile.css"; // Reuse profile styles often used for orders
+        $extra_css = "orders.css"; // Use orders.css for specific styling
         $base_path = '';
         
         require_once __DIR__ . '/../views/layouts/header.php';
@@ -143,16 +143,18 @@ class OrderController {
             // Let's quick fix: fetch image for each item.
             
             global $pdo; // Or use ProductModel
-            $stmtImg = $pdo->prepare("SELECT image FROM catalog_product_entity WHERE entity_id = ?");
+            $stmtImg = $pdo->prepare("SELECT image, sku FROM catalog_product_entity WHERE entity_id = ?");
             $stmtImg->execute([$item['product_id']]);
-            $img = $stmtImg->fetchColumn();
+            $productInfo = $stmtImg->fetch();
             
-            if ($img) {
-                $imagePath = 'images/' . $img;
+            if ($productInfo) {
+                $imagePath = 'images/' . ($productInfo['image'] ?? 'placeholder.jpg');
+                $fallbackSku = $productInfo['sku'] ?? 'N/A';
             }
             
             $formattedItems[] = [
                 'name' => $item['name'],
+                'sku' => (!empty($item['sku'])) ? $item['sku'] : $fallbackSku,
                 'qty' => $item['quantity'],
                 'price' => $item['price'],
                 'total' => $item['total_price'],

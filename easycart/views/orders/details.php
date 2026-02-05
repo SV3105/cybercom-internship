@@ -104,6 +104,7 @@
                          style="width: 80px; height: 80px; object-fit: contain; border-radius: 8px; border: 1px solid #e5e7eb; background: #f9fafb;">
                     <div style="flex: 1;">
                         <h3 style="margin: 0 0 0.25rem; font-size: 1rem; color: #1f2937;"><?php echo $item['name']; ?></h3>
+                        <p style="margin: 0 0 0.25rem; color: #6b7280; font-size: 0.85rem;">SKU: <?php echo $item['sku']; ?></p>
                         <p style="margin: 0; color: #4b5563; font-size: 0.9rem;">Quantity: <strong><?php echo $item['qty']; ?></strong></p>
                     </div>
                     <div style="text-align: right;">

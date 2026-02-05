@@ -136,6 +136,21 @@ class CheckoutController {
         
         // 2. Recalculate Totals (Secure source of truth)
         $products = $this->productModel->getAllProducts();
+        $cart = $_SESSION['cart'] ?? [];
+        
+        // Stock Pre-Check
+        foreach ($cart as $pId => $qty) {
+            foreach ($products as $p) {
+                if ($p['id'] == $pId) {
+                    if ($p['stock_qty'] < $qty) {
+                        echo json_encode(['success' => false, 'message' => "Sorry, " . $p['title'] . " only has " . $p['stock_qty'] . " units in stock."]);
+                        exit;
+                    }
+                    break;
+                }
+            }
+        }
+
         $shipping_method = isset($_SESSION['shipping_method']) ? $_SESSION['shipping_method'] : null;
         $promo_code = isset($_SESSION['applied_promo']) ? $_SESSION['applied_promo'] : null;
         

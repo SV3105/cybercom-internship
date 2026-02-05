@@ -41,6 +41,7 @@ try {
             p.is_featured,
             p.rating,
             p.review_count,
+            p.stock_qty,
             c.slug as category_slug,
             b.slug as brand_slug,
             STRING_AGG(g.image, ',' ORDER BY g.is_primary DESC, g.image_id ASC) as gallery_images,
@@ -50,7 +51,7 @@ try {
         LEFT JOIN catalog_brand_entity b ON p.brand_id = b.entity_id
         LEFT JOIN catalog_product_gallery g ON p.entity_id = g.product_id
         LEFT JOIN catalog_product_attribute a ON p.entity_id = a.product_id AND a.attribute_name = 'feature'
-        GROUP BY p.entity_id, c.slug, b.slug
+        GROUP BY p.entity_id, c.slug, b.slug, p.stock_qty
         ORDER BY p.entity_id ASC
     ");
     
@@ -85,6 +86,7 @@ try {
             'featured'    => (bool)$row['is_featured'],
             'rating'      => (float)$row['rating'],
             'reviews'     => (int)$row['review_count'],
+            'stock_qty'   => (int)$row['stock_qty'],
             'description' => $row['description'],
             'features'    => $features,
             'gallery'     => $gallery
