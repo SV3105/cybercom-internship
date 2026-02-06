@@ -10,6 +10,7 @@ return [
     // Products
     'products' => ['controller' => 'ProductController', 'method' => 'list'],
     'product-details' => ['controller' => 'ProductController', 'method' => 'details'],
+    'product-search' => ['controller' => 'ProductController', 'method' => 'ajaxSearch'],
     
     // Order Routes
     'orders' => ['controller' => 'OrderController', 'method' => 'list'],

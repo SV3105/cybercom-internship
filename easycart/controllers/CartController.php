@@ -172,9 +172,10 @@ class CartController {
         
         // Sync if logged in or if guest has items
         $promo_code_to_sync = isset($_SESSION['applied_promo']) ? $_SESSION['applied_promo'] : null;
+        $shipping_method_to_sync = isset($_SESSION['shipping_method']) ? $_SESSION['shipping_method'] : null;
         
         if ($user_id || !empty($_SESSION['cart'])) {
-            $this->cartModel->syncCartToDb($user_id, $_SESSION['cart'], $current_session_id, $promo_code_to_sync);
+            $this->cartModel->syncCartToDb($user_id, $_SESSION['cart'], $current_session_id, $promo_code_to_sync, $shipping_method_to_sync);
         }
         
         // Calculate Totals

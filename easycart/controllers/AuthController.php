@@ -55,7 +55,8 @@ class AuthController {
         
         if ($user) {
             // Login Success
-            $_SESSION['user'] = [
+            session_regenerate_id(true); // new session ID
+             $_SESSION['user'] = [
                 'id' => $user['id'],
                 'name' => $user['name'],
                 'email' => $user['email'],
@@ -114,14 +115,23 @@ class AuthController {
      * Handle logout
      */
     public function logout() {
+        // Deactivate Cart if user was logged in
+        if (isset($_SESSION['user']['id'])) {
+             global $pdo;
+             require_once __DIR__ . '/../models/Cart.php';
+             $cartModel = new Cart($pdo);
+             $cartModel->deactivateUserCart($_SESSION['user']['id']);
+        }
+
         // Unset all session variables
         $_SESSION = [];
         
         // Destroy the session
         session_destroy();
         
-        // Restart session for flash messages if needed, or just redirect
+        // Start a fresh session with a new ID
         session_start();
+        session_regenerate_id(true); // Critical: Force new ID
         
         header("Location: is_home"); // Will rely on .htaccess/routing to handle empty path or redirect to home
         header("Location: ./");

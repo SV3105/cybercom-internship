@@ -102,5 +102,7 @@
             </ul>
         </nav>
     </header>
+    <script>const BASE_URL = "<?php echo BASE_URL; ?>";</script>
     <script src="<?php echo BASE_URL; ?>js/wishlist.js?v=<?php echo $v; ?>"></script>
+    <script src="<?php echo BASE_URL; ?>js/search.js?v=<?php echo $v; ?>"></script>
 

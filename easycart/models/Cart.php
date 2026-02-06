@@ -49,7 +49,7 @@ class Cart {
 
      * Sync session cart to database
      */
-    public function syncCartToDb($user_id, $cart, $session_id_val, $promo_code = null) {
+    public function syncCartToDb($user_id, $cart, $session_id_val, $promo_code = null, $shipping_method = null) {
         try {
             $cart_id = false;
             
@@ -110,13 +110,43 @@ class Cart {
                 }
             }
             
-            // --- Calculate Breakdown (Replicating logic to ensure DB is source of truth) ---
+            // --- Calculate Breakdown ---
+            
             // Shipping
-            if ($calculated_subtotal <= 300) {
-                 $shipping_cost = min(80, $calculated_subtotal * 0.10);
+            $shipping_options = [
+                'standard' => 40,
+                'express' => min(80, $calculated_subtotal * 0.10),
+                'white_glove' => min(150, $calculated_subtotal * 0.05),
+                'freight' => max(250, $calculated_subtotal * 0.03)
+            ];
+            
+            // Determine method: Use passed method if valid, otherwise use default logic
+            $selected_method = $shipping_method;
+            if (!$selected_method || !isset($shipping_options[$selected_method])) {
+                 // Default logic (from calculateTotals)
+                 if ($calculated_subtotal <= 300) {
+                     $selected_method = 'express';
+                 } else {
+                     $selected_method = 'freight';
+                 }
             } else {
-                 $shipping_cost = max(250, $calculated_subtotal * 0.03);
+                // Auto-Upgrade Logic: Ensure method is valid for cart size
+                // 1. If Cart > 300, Express isn't allowed (unless user really wants 10% capped at 80? No, express logic changes)
+                // Actually, Express logic is min(80, 10%). If subtotal is 1000, 10% is 100, capped at 80.
+                // But UI defaults to Freight for > 300.
+                // Let's enforce the "Upgrade" if user is on a "small cart" method but now has a "big cart"
+                
+                if ($calculated_subtotal > 300) {
+                    // Valid methods for > 300 are Freight, White Glove, Standard.
+                    // 'Express' is typically for small orders in our logic.
+                    // If user had 'express' selected, switch them to 'freight' automatically
+                    if ($selected_method === 'express') {
+                        $selected_method = 'freight';
+                    }
+                }
             }
+            
+            $shipping_cost = $shipping_options[$selected_method];
             if (empty($cart)) $shipping_cost = 0;
             
             // Smart Discount
@@ -129,12 +159,14 @@ class Cart {
             // Promo Discount
             $promo_discount = 0;
             if ($promo_code) {
-                $allowed_codes = ['SAVE5', 'SAVE10', 'SAVE15', 'SAVE20'];
-                if (in_array($promo_code, $allowed_codes)) {
-                     $percent = (int)substr($promo_code, 4);
-                     // Promo applies to subtotal + shipping (per existing logic in calculateTotals check line 174)
-                     // Let's copy specific CalculateTotals logic:
-                     // $base_for_promo = $subtotal + $shipping_cost;
+                // Fetch from DB
+                $stmtCoupon = $this->pdo->prepare("SELECT percentage FROM sales_coupons WHERE promo_code = ?");
+                $stmtCoupon->execute([$promo_code]);
+                $coupon_percent = $stmtCoupon->fetchColumn();
+
+                if ($coupon_percent !== false) {
+                     $percent = (int)$coupon_percent;
+                     // Promo applies to subtotal + shipping (per existing logic)
                      $base_for_promo = $calculated_subtotal + $shipping_cost;
                      $promo_discount = $base_for_promo * ($percent / 100);
                      
@@ -143,7 +175,7 @@ class Cart {
                          $smart_discount = 0;
                      }
                 } else {
-                    $promo_code = null; // Invalid code shouldn't be saved
+                    $promo_code = null; // Invalid code
                 }
             }
             
@@ -186,18 +218,16 @@ class Cart {
             'freight' => max(250, $subtotal * 0.03)
         ];
         
+        // ... (Shipping Method Logic Omitted for brevity, kept same) ...
+        // Re-implement shipping selection logic briefly to keep context valid if replaced fully
         $selected_method = $shipping_method;
         if ($selected_method === null) {
             $selected_method = ($subtotal <= 300) ? 'express' : 'freight';
         } else {
             if ($subtotal <= 300) {
-                if ($selected_method !== 'express') {
-                     $selected_method = 'express';
-                }
+                if ($selected_method !== 'express') $selected_method = 'express';
             } else {
-                if ($selected_method !== 'white_glove' && $selected_method !== 'freight') {
-                    $selected_method = 'freight';
-                }
+                if ($selected_method !== 'white_glove' && $selected_method !== 'freight') $selected_method = 'freight';
             }
         }
         
@@ -220,16 +250,27 @@ class Cart {
         $promo_discount = 0;
         $promo_message = "";
         if ($promo_code) {
-            $allowed_codes = ['SAVE5', 'SAVE10', 'SAVE15', 'SAVE20'];
-            if (in_array($promo_code, $allowed_codes)) {
-                 $percent = (int)substr($promo_code, 4);
-                 $base_for_promo = $subtotal + $shipping_cost;
-                 $promo_discount = $base_for_promo * ($percent / 100);
-                 $promo_message = "{$promo_code} Applied ({$percent}% off)";
-                 if ($promo_discount > 0) {
-                     $smart_discount = 0;
-                     $reason = ""; 
-                 }
+            // DB Fetch
+            // Note: calculateTotals is sometimes called without full DB context check in pure utilities, 
+            // but here $this->pdo is available.
+            try {
+                $stmtC = $this->pdo->prepare("SELECT percentage, promo_message FROM sales_coupons WHERE promo_code = ?");
+                $stmtC->execute([$promo_code]);
+                $coupon = $stmtC->fetch();
+                
+                if ($coupon) {
+                     $percent = (int)$coupon['percentage'];
+                     $base_for_promo = $subtotal + $shipping_cost;
+                     $promo_discount = $base_for_promo * ($percent / 100);
+                     $promo_message = $coupon['promo_message']; // Use DB message
+                     
+                     if ($promo_discount > 0) {
+                         $smart_discount = 0;
+                         $reason = ""; 
+                     }
+                }
+            } catch (PDOException $e) {
+                // Ignore DB error, just no promo
             }
         }
         
@@ -249,8 +290,36 @@ class Cart {
             'selected_method' => $selected_method,
             'promo_discount' => $promo_discount,
             'promo_code' => $promo_code,
-            'promo_message' => $promo_message
+            'promo_message' => $promo_message,
+            'selected_method' => $selected_method ?? (($subtotal <= 300) ? 'express' : 'freight')
         ];
+    }
+
+    /**
+     * Deactivate user's cart (used on logout)
+     */
+    public function deactivateUserCart($user_id) {
+        try {
+            // 1. Get Active Cart ID
+            $stmt = $this->pdo->prepare("SELECT id FROM sales_cart WHERE user_id = ? AND is_active = TRUE");
+            $stmt->execute([$user_id]);
+            $cart_id = $stmt->fetchColumn();
+
+            if ($cart_id) {
+                // 2. Check if it has items
+                $stmtCount = $this->pdo->prepare("SELECT COUNT(*) FROM sales_cart_products WHERE cart_id = ?");
+                $stmtCount->execute([$cart_id]);
+                $count = $stmtCount->fetchColumn();
+
+                // 3. Only Deactivate if Empty
+                if ($count == 0) {
+                    $stmtUpdate = $this->pdo->prepare("UPDATE sales_cart SET is_active = FALSE WHERE id = ?");
+                    $stmtUpdate->execute([$cart_id]);
+                }
+            }
+        } catch (PDOException $e) {
+            error_log("Cart Deactivation Error: " . $e->getMessage());
+        }
     }
 }
 ?>

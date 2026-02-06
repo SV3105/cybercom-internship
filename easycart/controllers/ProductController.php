@@ -158,5 +158,42 @@ class ProductController {
         require_once __DIR__ . '/../views/products/details.php';
         require_once __DIR__ . '/../views/layouts/footer.php';
     }
+
+    /**
+     * AJAX Search Handler
+     */
+    public function ajaxSearch() {
+        header('Content-Type: application/json');
+        
+        $query = isset($_GET['q']) ? trim($_GET['q']) : '';
+        
+        if (strlen($query) < 2) {
+            echo json_encode([]);
+            exit;
+        }
+        
+        // Use Model's search logic
+        // We might need to expose public searchProducts if not available, 
+        // checking Product model... it has searchProducts($query)
+        $results = $this->productModel->searchProducts($query);
+        
+        // Format for JSON
+        $json_results = [];
+        $count = 0;
+        foreach ($results as $p) {
+            if ($count >= 8) break; // Limit to 8 results
+            $json_results[] = [
+                'id' => $p['id'],
+                'title' => $p['title'],
+                'image' => $p['image'], // Just filename
+                'price' => $p['price'],
+                'category' => ucfirst($p['category'])
+            ];
+            $count++;
+        }
+        
+        echo json_encode($json_results);
+        exit;
+    }
 }
 ?>
