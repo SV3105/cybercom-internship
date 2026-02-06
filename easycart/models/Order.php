@@ -50,8 +50,8 @@ class Order {
             // 2. Insert Order Items
             $stmtItem = $this->pdo->prepare("
                 INSERT INTO sales_order_products 
-                (order_id, product_id, name, price, quantity, total_price) 
-                VALUES (?, ?, ?, ?, ?, ?)
+                (order_id, product_id, sku, name, price, quantity, total_price) 
+                VALUES (?, ?, ?, ?, ?, ?, ?)
             ");
             
             // We need product details for names/prices. 

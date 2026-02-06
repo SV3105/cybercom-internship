@@ -42,16 +42,18 @@ try {
             p.rating,
             p.review_count,
             p.stock_qty,
-            c.slug as category_slug,
-            b.slug as brand_slug,
-            STRING_AGG(g.image, ',' ORDER BY g.is_primary DESC, g.image_id ASC) as gallery_images,
+            (SELECT STRING_AGG(c.slug, ',') FROM catalog_category_products cp 
+             JOIN catalog_category_entity c ON cp.category_id = c.entity_id 
+             WHERE cp.product_id = p.entity_id) as category_slugs,
+            (SELECT STRING_AGG(b.slug, ',') FROM catalog_brand_products bp 
+             JOIN catalog_brand_entity b ON bp.brand_id = b.entity_id 
+             WHERE bp.product_id = p.entity_id) as brand_slugs,
+            (SELECT STRING_AGG(g.image, ',' ORDER BY g.is_primary DESC, g.image_id ASC) 
+             FROM catalog_product_gallery g WHERE g.product_id = p.entity_id) as gallery_images,
             STRING_AGG(DISTINCT a.attribute_value, '|' ORDER BY a.attribute_value) as features
         FROM catalog_product_entity p
-        LEFT JOIN catalog_category_entity c ON p.category_id = c.entity_id
-        LEFT JOIN catalog_brand_entity b ON p.brand_id = b.entity_id
-        LEFT JOIN catalog_product_gallery g ON p.entity_id = g.product_id
         LEFT JOIN catalog_product_attribute a ON p.entity_id = a.product_id AND a.attribute_name = 'feature'
-        GROUP BY p.entity_id, c.slug, b.slug, p.stock_qty
+        GROUP BY p.entity_id, p.stock_qty
         ORDER BY p.entity_id ASC
     ");
     
@@ -60,13 +62,23 @@ try {
     foreach ($rawProducts as $row) {
         $pId = $row['entity_id'];
         
-        // Process gallery images
+        // Process categories
+        $categorySlugs = !empty($row['category_slugs']) ? explode(',', $row['category_slugs']) : [];
+        $category_slug = !empty($categorySlugs) ? $categorySlugs[0] : 'uncategorized';
+
+        // Process brands
+        $brandSlugs = !empty($row['brand_slugs']) ? explode(',', $row['brand_slugs']) : [];
+        $brand_slug = !empty($brandSlugs) ? $brandSlugs[0] : 'unknown';
+        
+        // Process gallery images (Main + 3 from DB = 4 Total)
         $gallery = [];
         if (!empty($row['gallery_images'])) {
-            $gallery = array_values(array_unique(explode(',', $row['gallery_images'])));
-        } elseif (!empty($row['image'])) {
-            $gallery = [$row['image']];
+            $gallery = explode(',', $row['gallery_images']);
         }
+        
+        // Prepend main image to be the first thumbnail
+        array_unshift($gallery, $row['image']);
+        $gallery = array_values($gallery);
 
         // Process features
         $features = [];
@@ -77,8 +89,10 @@ try {
         $item = [
             'id'          => $pId,
             'title'       => $row['name'],
-            'category'    => $row['category_slug'] ?? 'independent', 
-            'brand'       => $row['brand_slug'] ?? 'generic',
+            'category'    => $category_slug, 
+            'categories'  => $categorySlugs,
+            'brand'       => $brand_slug,
+            'brands'      => $brandSlugs,
             'price'       => number_format($row['price']), 
             'old_price'   => $row['old_price'] ? number_format($row['old_price']) : null,
             'image'       => $row['image'],

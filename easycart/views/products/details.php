@@ -24,6 +24,17 @@
             </div>
             <div class="product-info">
             <h2><?php echo $current_product['title']; ?></h2>
+            
+            <div class="product-categories">
+                <?php 
+                $productCats = isset($current_product['categories']) ? (array)$current_product['categories'] : [$current_product['category']];
+                foreach ($productCats as $catSlug): 
+                    $catName = isset($categories[$catSlug]) ? $categories[$catSlug]['name'] : ucwords(str_replace('-', ' ', $catSlug));
+                ?>
+                    <a href="products?category=<?php echo $catSlug; ?>" class="category-tag"><?php echo $catName; ?></a>
+                <?php endforeach; ?>
+            </div>
+
             <div class="rating">
                 <?php 
                 $rating = isset($current_product['rating']) ? $current_product['rating'] : 4.0;
@@ -48,6 +59,16 @@
                 <span style="text-decoration: line-through; color: #999; font-size: 0.8em; margin-left: 10px;">₹ <?php echo $current_product['old_price']; ?></span>
                 <?php endif; ?>
             </p>
+
+            <div class="product-stock-status">
+                <?php if ($current_product['stock_qty'] <= 0): ?>
+                    <span class="stock-badge stock-out"><i class="fas fa-times-circle"></i> Out of Stock</span>
+                <?php elseif ($current_product['stock_qty'] <= 5): ?>
+                    <span class="stock-badge stock-low"><i class="fas fa-exclamation-triangle"></i> Only <?php echo $current_product['stock_qty']; ?> left</span>
+                <?php else: ?>
+                    <span class="stock-badge stock-in"><i class="fas fa-check-circle"></i> In Stock</span>
+                <?php endif; ?>
+            </div>
             
             <div class="product-description">
                 <h3>Description</h3>
@@ -55,12 +76,15 @@
                 <?php echo isset($current_product['description']) ? $current_product['description'] : 'Product description not available.'; ?>
                 </p>
                 
-                <?php if(isset($current_product['features']) && is_array($current_product['features'])): ?>
-                <ul>
-                    <?php foreach($current_product['features'] as $feature): ?>
-                    <li><?php echo $feature; ?></li>
-                    <?php endforeach; ?>
-                </ul>
+                <?php if(isset($current_product['features']) && is_array($current_product['features']) && !empty($current_product['features'])): ?>
+                <div class="features-section">
+                    <h3>Key Features</h3>
+                    <ul class="features-list">
+                        <?php foreach($current_product['features'] as $feature): ?>
+                        <li><i class="fas fa-check"></i> <?php echo $feature; ?></li>
+                        <?php endforeach; ?>
+                    </ul>
+                </div>
                 <?php endif; ?>
             </div>
             

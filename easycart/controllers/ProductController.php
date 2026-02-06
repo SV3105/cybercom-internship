@@ -26,21 +26,26 @@ class ProductController {
         
         // 2. Filter Logic
         $filtered_products = array_filter($products, function($product) use ($selected_categories, $selected_brands, $search_query) {
-            // Check Category
-            $cat_match = empty($selected_categories) || in_array($product['category'], $selected_categories);
-            // Check Brand
-            $brand_match = empty($selected_brands) || in_array($product['brand'], $selected_brands);
-            // Check Search
+            // 1. Check Category (Multi-support)
+            $productCats = $product['categories'] ?? [$product['category']];
+            $cat_match = empty($selected_categories) || !empty(array_intersect((array)$productCats, $selected_categories));
+            
+            // 2. Check Brand (Multi-support)
+            $productBrands = $product['brands'] ?? [$product['brand']];
+            $brand_match = empty($selected_brands) || !empty(array_intersect((array)$productBrands, $selected_brands));
+            
+            // 3. Check Search
             $search_match = true;
             if ($search_query !== '') {
                 $search_words = explode(' ', strtolower($search_query));
                 
-                // Load category synonyms for matching (generalized names only)
+                // Load category synonyms for matching
                 $cat_labels = [
                     'electronics' => 'Tech Electronics Technology Gadgets',
                     'fashion' => 'Fashion Clothing Apparel Wear',
-                    'home' => 'Home Travel Luggage Living',
-                    'beauty' => 'Beauty Personal Care Health'
+                    'home-living' => 'Home Travel Luggage Living Decor',
+                    'beauty' => 'Beauty Personal Care Health',
+                    'smartphones' => 'Smartphone Mobile Phone Cellphone iPhone Android'
                 ];
                 
                 foreach ($search_words as $word) {
@@ -49,28 +54,30 @@ class ProductController {
                     
                     $word_found = false;
                     
-                    // 1. Check in Title
+                    // Check in Title
                     if (stripos($product['title'], $word) !== false) $word_found = true;
-                    // 2. Check in Brand
-                    elseif (stripos($product['brand'], $word) !== false) $word_found = true;
-                    // 3. Check in Category Slug OR Display Label
-                    elseif (stripos($product['category'], $word) !== false) $word_found = true;
-                    elseif (isset($cat_labels[$product['category']]) && stripos($cat_labels[$product['category']], $word) !== false) $word_found = true;
-                    // 4. Check in Description
-                    elseif (isset($product['description']) && stripos($product['description'], $word) !== false) $word_found = true;
-                    // 5. Check in Image Filename (removes .png/.jpg etc)
-                    elseif (stripos($product['image'], $word) !== false) $word_found = true;
-                    // 6. Check in Features
-                    elseif (isset($product['features']) && is_array($product['features'])) {
+                    // Check in all Brands
+                    if (!$word_found) {
+                        foreach ($productBrands as $bSlug) {
+                            if (stripos($bSlug, $word) !== false) { $word_found = true; break; }
+                        }
+                    }
+                    // Check in all Categories
+                    if (!$word_found) {
+                        foreach ($productCats as $cSlug) {
+                            if (stripos($cSlug, $word) !== false) { $word_found = true; break; }
+                            if (isset($cat_labels[$cSlug]) && stripos($cat_labels[$cSlug], $word) !== false) { $word_found = true; break; }
+                        }
+                    }
+                    // Check in Description
+                    if (!$word_found && isset($product['description']) && stripos($product['description'], $word) !== false) $word_found = true;
+                    // Check in Features
+                    if (!$word_found && isset($product['features']) && is_array($product['features'])) {
                         foreach ($product['features'] as $feature) {
-                            if (stripos($feature, $word) !== false) {
-                                $word_found = true;
-                                break;
-                            }
+                            if (stripos($feature, $word) !== false) { $word_found = true; break; }
                         }
                     }
                     
-                    // If THIS word was not found in ANY field, then the product is not a match
                     if (!$word_found) {
                         $search_match = false;
                         break;
@@ -83,14 +90,13 @@ class ProductController {
         
         // --- PAGINATION LOGIC ---
         $limit = 16; // Products per page
-        $page_num = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-        if ($page_num < 1) $page_num = 1;
+        $page_num = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
         
         $total_products = count($filtered_products);
-        $total_pages = ceil($total_products / $limit);
+        $total_pages = max(1, (int)ceil($total_products / $limit));
         
         // Ensure page doesn't exceed total pages
-        if ($page_num > $total_pages && $total_pages > 0) $page_num = $total_pages;
+        if ($page_num > $total_pages) $page_num = $total_pages;
         
         $offset = ($page_num - 1) * $limit;
         $paginated_products = array_slice($filtered_products, $offset, $limit);
