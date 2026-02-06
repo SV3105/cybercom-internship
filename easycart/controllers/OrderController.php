@@ -37,10 +37,8 @@ class OrderController {
             // We need items for the preview in the list though.
             
             // Re-using logic from original PHP to keep it simple but cleaner
-            global $pdo;
-            $stmtItems = $pdo->prepare("SELECT * FROM sales_order_products WHERE order_id = ?");
-            $stmtItems->execute([$orderId]);
-            $items = $stmtItems->fetchAll();
+            // Use Model methods instead of direct SQL
+            $items = $this->orderModel->getOrderItems($orderId);
     
             $formattedItems = [];
             foreach ($items as $item) {
@@ -51,10 +49,8 @@ class OrderController {
                 ];
             }
             
-            // Get Shipping Method
-            $stmtShipping = $pdo->prepare("SELECT shipping_method FROM sales_order_payment WHERE order_id = ?");
-            $stmtShipping->execute([$orderId]);
-            $shippingData = $stmtShipping->fetch();
+            // Get Shipping Method via Model
+            $shippingMethod = $this->orderModel->getOrderShippingMethod($orderId);
             
             $shippingLabels = [
                 'standard' => 'Standard Shipping',
@@ -62,7 +58,6 @@ class OrderController {
                 'white_glove' => 'White Glove Service',
                 'freight' => 'Freight Shipping'
             ];
-            $shippingMethod = $shippingData['shipping_method'] ?? 'standard';
             $shippingType = $shippingLabels[$shippingMethod] ?? 'Standard Shipping';
     
             $orders[] = [
@@ -137,20 +132,12 @@ class OrderController {
         // 3. Format Items
         $formattedItems = [];
         foreach ($orderData['items'] as $item) {
-            $imagePath = 'images/placeholder.jpg'; // Default relative to base
-            // Fetch image from product if not in order_items (though usually order items should store snapshot)
-            // Original code joined with catalog_product_entity. Model's getOrder didn't do that join join yet.
-            // Let's quick fix: fetch image for each item.
+            // Image now comes from JOIN in model (product_image)
+            $imagePath = 'images/' . ($item['product_image'] ?? 'placeholder.jpg');
+            $fallbackSku = $item['product_sku'] ?? 'N/A';
             
-            global $pdo; // Or use ProductModel
-            $stmtImg = $pdo->prepare("SELECT image, sku FROM catalog_product_entity WHERE entity_id = ?");
-            $stmtImg->execute([$item['product_id']]);
-            $productInfo = $stmtImg->fetch();
-            
-            if ($productInfo) {
-                $imagePath = 'images/' . ($productInfo['image'] ?? 'placeholder.jpg');
-                $fallbackSku = $productInfo['sku'] ?? 'N/A';
-            }
+            // Fallback if image path is empty string
+            if (empty($item['product_image'])) $imagePath = 'images/placeholder.jpg';
             
             $formattedItems[] = [
                 'name' => $item['name'],

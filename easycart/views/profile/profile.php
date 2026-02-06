@@ -130,7 +130,7 @@
                         <div style="width: 60px; height: 60px; background: #fef2f2; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 1rem;">
                             <i class="fas fa-heart" style="font-size: 1.75rem; color: #ef4444;"></i>
                         </div>
-                        <h3 style="margin: 0 0 0.5rem; font-size: 1.5rem; font-weight: 700; color: #1e293b;">View</h3> <!-- Dynamic count separate -->
+                        <h3 style="margin: 0 0 0.5rem; font-size: 1.5rem; font-weight: 700; color: #1e293b;"><?php echo $wishlist_count; ?></h3> <!-- Dynamic count -->
                         <p style="margin: 0; color: #64748b; font-weight: 500;">Wishlist</p>
                         <p style="margin: 0.5rem 0 0; color: #94a3b8; font-size: 0.875rem;">All your curated products</p>
                     </a>
@@ -140,7 +140,7 @@
                         <div style="width: 60px; height: 60px; background: #f0fdf4; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 1rem;">
                             <i class="fas fa-wallet" style="font-size: 1.75rem; color: #22c55e;"></i>
                         </div>
-                        <h3 style="margin: 0 0 0.5rem; font-size: 1.5rem; font-weight: 700; color: #1e293b;">₹<?php echo number_format($total_spent); ?></h3>
+                        <h3 style="margin: 0 0 0.5rem; font-size: 1.5rem; font-weight: 700; color: #1e293b;">₹<?php echo number_format($total_spent, 2); ?></h3>
                         <p style="margin: 0; color: #64748b; font-weight: 500;">Total Spent</p>
                         <p style="margin: 0.5rem 0 0; color: #94a3b8; font-size: 0.875rem;">Lifetime spending</p>
                     </div>
@@ -176,7 +176,22 @@
                                     <h4 style="margin: 0 0 0.25rem; font-size: 1rem; font-weight: 600; color: #1e293b;">Order #<?php echo htmlspecialchars($order['increment_id']); ?></h4>
                                     <p style="margin: 0; font-size: 0.875rem; color: #64748b;">Placed on <?php echo date('M d, Y', strtotime($order['created_at'])); ?> • ₹<?php echo number_format($order['grand_total'], 2); ?></p>
                                 </div>
-                                <span style="font-size: 0.75rem; padding: 0.375rem 0.75rem; border-radius: 6px; background: #dcfce7; color: #166534; font-weight: 600;"><?php echo ucfirst($order['status']); ?></span>
+                                <?php
+                                $statusColor = '#64748b'; // default gray
+                                $statusBg = '#f1f5f9';
+                                switch(strtolower($order['status'])) {
+                                    case 'pending':
+                                        $statusBg = '#fff7ed'; $statusColor = '#c2410c'; // Orange
+                                        break;
+                                    case 'processing':
+                                        $statusBg = '#eff6ff'; $statusColor = '#1d4ed8'; // Blue
+                                        break;
+                                    case 'delivered':
+                                        $statusBg = '#dcfce7'; $statusColor = '#15803d'; // Green
+                                        break;
+                                }
+                                ?>
+                                <span style="font-size: 0.75rem; padding: 0.375rem 0.75rem; border-radius: 6px; background: <?php echo $statusBg; ?>; color: <?php echo $statusColor; ?>; font-weight: 600;"><?php echo ucfirst($order['status']); ?></span>
                             </div>
                             <?php endforeach; ?>
                         </div>

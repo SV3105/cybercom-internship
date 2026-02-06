@@ -108,7 +108,7 @@
                                     <label>Card Number</label>
                                     <div class="input-icon-wrapper">
                                         <i class="far fa-credit-card"></i>
-                                        <input type="text" placeholder="0000 0000 0000 0000" maxlength="19" id="checkoutCard">
+                                        <input type="text" placeholder="0000000000000000" maxlength="16" id="checkoutCard">
                                     </div>
                                 </div>
                                 <div class="form-row">
@@ -231,6 +231,12 @@
                     <div class="summary-row discount">
                         <span>Smart Discount</span>
                         <span>-₹<?php echo number_format($smart_discount, 2); ?></span>
+                    </div>
+                    <?php endif; ?>
+                    <?php if ($promo_discount > 0): ?>
+                    <div class="summary-row discount">
+                        <span>Promo (<?php echo htmlspecialchars($applied_promo_code); ?>)</span>
+                        <span>-₹<?php echo number_format($promo_discount, 2); ?></span>
                     </div>
                     <?php endif; ?>
                     <div class="summary-row">

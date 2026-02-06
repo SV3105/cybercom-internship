@@ -128,7 +128,8 @@ function validatePaymentForm() {
         
         // Specific format validation (Optional)
         if (method === 'card') {
-            const cardNum = detailsContainer.querySelector('input[placeholder*="0000 0000"]').value.replace(/\s/g, '');
+            const cardInput = document.getElementById('checkoutCard');
+            const cardNum = cardInput.value.replace(/\s/g, '');
             if (cardNum.length < 16 || isNaN(cardNum)) {
                 alert('Please enter a valid Card Number');
                 return false;
@@ -163,7 +164,7 @@ function validatePaymentForm() {
     let info = {};
     if (method === 'card') {
          info = {
-             card_number: detailsContainer.querySelector('input[placeholder*="0000 0000"]').value,
+             card_number: document.getElementById('checkoutCard').value,
              card_holder: detailsContainer.querySelector('input[placeholder*="Name"]').value,
              expiry: detailsContainer.querySelector('input[placeholder*="MM/YY"]').value
          };

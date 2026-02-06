@@ -57,6 +57,8 @@ class CheckoutController {
         $tax = $cart_totals['tax'];
         $total = $cart_totals['total'];
         $smart_discount = $cart_totals['smart_discount'];
+        $promo_discount = $cart_totals['promo_discount'] ?? 0;
+        $applied_promo_code = $cart_totals['promo_code'] ?? '';
         
         // Pre-fill user data
         $prefill = [

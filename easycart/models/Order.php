@@ -22,7 +22,7 @@ class Order {
             // Calculate total discount (Smart + Promo)
             $total_discount = $totals['smart_discount'] + $totals['promo_discount'];
             $coupon_code = $totals['promo_code'];
-            $status = 'processing';
+            $status = 'pending';
 
             $stmtOrder = $this->pdo->prepare("
                 INSERT INTO sales_order 
@@ -138,6 +138,9 @@ class Order {
     /**
      * Get order details
      */
+    /**
+     * Get order details with full info
+     */
     public function getOrder($order_id, $user_id) {
         try {
             $stmt = $this->pdo->prepare("SELECT * FROM sales_order WHERE order_id = ? AND user_id = ?");
@@ -146,8 +149,14 @@ class Order {
             
             if (!$order) return null;
             
-            // Get Items
-            $stmtItems = $this->pdo->prepare("SELECT * FROM sales_order_products WHERE order_id = ?");
+            // Get Items with Product Image and SKU
+            // Using JOIN to get catalog data efficiently
+            $stmtItems = $this->pdo->prepare("
+                SELECT sop.*, cpe.image as product_image, cpe.sku as product_sku 
+                FROM sales_order_products sop
+                LEFT JOIN catalog_product_entity cpe ON sop.product_id = cpe.entity_id
+                WHERE sop.order_id = ?
+            ");
             $stmtItems->execute([$order_id]);
             $order['items'] = $stmtItems->fetchAll();
             
@@ -164,6 +173,33 @@ class Order {
             return $order;
         } catch (PDOException $e) {
             return null;
+        }
+    }
+
+    /**
+     * Get Order Items for List View
+     */
+    public function getOrderItems($order_id) {
+         try {
+            $stmt = $this->pdo->prepare("SELECT name, quantity, price FROM sales_order_products WHERE order_id = ?");
+            $stmt->execute([$order_id]);
+            return $stmt->fetchAll();
+         } catch (PDOException $e) {
+             return [];
+         }
+    }
+    
+    /**
+     * Get Shipping Method
+     */
+    public function getOrderShippingMethod($order_id) {
+        try {
+            $stmt = $this->pdo->prepare("SELECT shipping_method FROM sales_order_payment WHERE order_id = ?");
+            $stmt->execute([$order_id]);
+            $res = $stmt->fetch();
+            return $res['shipping_method'] ?? 'standard';
+        } catch (PDOException $e) {
+            return 'standard';
         }
     }
     /**

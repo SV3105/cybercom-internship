@@ -171,8 +171,10 @@ class CartController {
         $user_id = isset($_SESSION['user']) ? $_SESSION['user']['id'] : null;
         
         // Sync if logged in or if guest has items
+        $promo_code_to_sync = isset($_SESSION['applied_promo']) ? $_SESSION['applied_promo'] : null;
+        
         if ($user_id || !empty($_SESSION['cart'])) {
-            $this->cartModel->syncCartToDb($user_id, $_SESSION['cart'], $current_session_id);
+            $this->cartModel->syncCartToDb($user_id, $_SESSION['cart'], $current_session_id, $promo_code_to_sync);
         }
         
         // Calculate Totals
