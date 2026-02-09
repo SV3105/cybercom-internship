@@ -53,5 +53,7 @@ return [
     'admin/order-status-update' => ['controller' => 'AdminController', 'method' => 'updateOrderStatus'],
     'admin/order-save-notes' => ['controller' => 'AdminController', 'method' => 'saveOrderNotes'],
     'admin/profile' => ['controller' => 'AdminController', 'method' => 'profile'],
+    'admin/create-admin' => ['controller' => 'AdminController', 'method' => 'showCreateAdmin'],
+    'admin/process-create-admin' => ['controller' => 'AdminController', 'method' => 'handleCreateAdmin'],
 ];
 ?>

@@ -55,6 +55,14 @@
                         <i class="fas fa-shopping-cart"></i>
                         <span>Orders</span>
                     </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">Management</div>
+                    <a href="<?= BASE_URL ?>admin/create-admin" class="nav-link <?= ($page ?? '') === 'create_admin' ? 'active' : '' ?>">
+                        <i class="fas fa-user-plus"></i>
+                        <span>Create Admin</span>
+                    </a>
                     <a href="<?= BASE_URL ?>" class="nav-link">
                         <i class="fas fa-home"></i>
                         <span>Back to Store</span>

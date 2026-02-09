@@ -261,5 +261,19 @@ class Admin {
         $stmt = $this->pdo->prepare("UPDATE sales_order SET admin_notes = ? WHERE order_id = ?");
         return $stmt->execute([$notes, $id]);
     }
+
+    /**
+     * Create a new administrator account
+     */
+    public function createAdmin($name, $email, $password) {
+        try {
+            $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+            $stmt = $this->pdo->prepare("INSERT INTO admins (name, email, password) VALUES (?, ?, ?)");
+            return $stmt->execute([$name, $email, $hashedPassword]);
+        } catch (PDOException $e) {
+            error_log("Admin creation error: " . $e->getMessage());
+            return false;
+        }
+    }
 }
 ?>

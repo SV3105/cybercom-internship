@@ -193,8 +193,8 @@ class OrderController {
      * View order invoice
      */
     public function invoice() {
-        // Auth Check
-        if (!isset($_SESSION['user'])) {
+        // Auth Check - Allow both User and Admin
+        if (!isset($_SESSION['user']) && !isset($_SESSION['admin_user'])) {
             header("Location: auth");
             exit;
         }
@@ -204,9 +204,10 @@ class OrderController {
             die("Invalid Order ID.");
         }
         
-        $user_id = $_SESSION['user']['id'];
+        // Pass user_id only if regular user is logged in
+        $user_id = isset($_SESSION['user']) ? $_SESSION['user']['id'] : null;
         
-        // Fetch Order specifically checking user ownership
+        // Fetch Order (if admin, $user_id is null, allowing any order access)
         $orderData = $this->orderModel->getOrder($order_id, $user_id);
         
         if (!$orderData) {

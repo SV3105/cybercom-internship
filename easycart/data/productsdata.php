@@ -42,18 +42,16 @@ try {
             p.rating,
             p.review_count,
             p.stock_qty,
-            (SELECT STRING_AGG(c.slug, ',') FROM catalog_category_products cp 
-             JOIN catalog_category_entity c ON cp.category_id = c.entity_id 
-             WHERE cp.product_id = p.entity_id) as category_slugs,
-            (SELECT STRING_AGG(b.slug, ',') FROM catalog_brand_products bp 
-             JOIN catalog_brand_entity b ON bp.brand_id = b.entity_id 
-             WHERE bp.product_id = p.entity_id) as brand_slugs,
+            c.slug as category_slug,
+            b.slug as brand_slug,
             (SELECT STRING_AGG(g.image, ',' ORDER BY g.is_primary DESC, g.image_id ASC) 
              FROM catalog_product_gallery g WHERE g.product_id = p.entity_id) as gallery_images,
             STRING_AGG(DISTINCT a.attribute_value, '|' ORDER BY a.attribute_value) as features
         FROM catalog_product_entity p
+        LEFT JOIN catalog_category_entity c ON p.category_id = c.entity_id
+        LEFT JOIN catalog_brand_entity b ON p.brand_id = b.entity_id
         LEFT JOIN catalog_product_attribute a ON p.entity_id = a.product_id AND a.attribute_name = 'feature'
-        GROUP BY p.entity_id, p.stock_qty
+        GROUP BY p.entity_id, p.stock_qty, c.slug, b.slug
         ORDER BY p.entity_id ASC
     ");
     
@@ -63,12 +61,12 @@ try {
         $pId = $row['entity_id'];
         
         // Process categories
-        $categorySlugs = !empty($row['category_slugs']) ? explode(',', $row['category_slugs']) : [];
-        $category_slug = !empty($categorySlugs) ? $categorySlugs[0] : 'uncategorized';
+        $category_slug = !empty($row['category_slug']) ? $row['category_slug'] : 'uncategorized';
+        $categorySlugs = [$category_slug];
 
         // Process brands
-        $brandSlugs = !empty($row['brand_slugs']) ? explode(',', $row['brand_slugs']) : [];
-        $brand_slug = !empty($brandSlugs) ? $brandSlugs[0] : 'unknown';
+        $brand_slug = !empty($row['brand_slug']) ? $row['brand_slug'] : 'unknown';
+        $brandSlugs = [$brand_slug];
         
         // Process gallery images (Main + 3 from DB = 4 Total)
         $gallery = [];

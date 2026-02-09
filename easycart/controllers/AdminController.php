@@ -528,6 +528,50 @@ class AdminController {
         require_once __DIR__ . '/../views/layouts/admin/footer.php';
     }
 
+    /**
+     * Show form to create new admin
+     */
+    public function showCreateAdmin() {
+        $title = "Create New Administrator";
+        $page = "create_admin";
+        $page_title = "Admin Management";
+        $extra_css = "admin.css";
+        $base_path = '';
 
+        require_once __DIR__ . '/../views/layouts/admin/header.php';
+        require_once __DIR__ . '/../views/admin/create_admin.php';
+        require_once __DIR__ . '/../views/layouts/admin/footer.php';
+    }
+
+    /**
+     * Handle creation of new admin
+     */
+    public function handleCreateAdmin() {
+        $name = isset($_POST['name']) ? trim($_POST['name']) : '';
+        $email = isset($_POST['email']) ? trim($_POST['email']) : '';
+        $password = isset($_POST['password']) ? trim($_POST['password']) : '';
+        $confirm_password = isset($_POST['confirm_password']) ? trim($_POST['confirm_password']) : '';
+
+        if (empty($name) || empty($email) || empty($password)) {
+            setFlash('error', 'All fields are required.');
+            header('Location: ' . BASE_URL . 'admin/create-admin');
+            exit;
+        }
+
+        if ($password !== $confirm_password) {
+            setFlash('error', 'Passwords do not match.');
+            header('Location: ' . BASE_URL . 'admin/create-admin');
+            exit;
+        }
+
+        if ($this->adminModel->createAdmin($name, $email, $password)) {
+            setFlash('success', 'New administrator account created successfully!');
+            header('Location: ' . BASE_URL . 'admin/dashboard');
+        } else {
+            setFlash('error', 'Failed to create admin account. Email might already exist.');
+            header('Location: ' . BASE_URL . 'admin/create-admin');
+        }
+        exit;
+    }
 }
 ?>

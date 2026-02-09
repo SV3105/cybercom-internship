@@ -141,10 +141,15 @@ class Order {
     /**
      * Get order details with full info
      */
-    public function getOrder($order_id, $user_id) {
+    public function getOrder($order_id, $user_id = null) {
         try {
-            $stmt = $this->pdo->prepare("SELECT * FROM sales_order WHERE order_id = ? AND user_id = ?");
-            $stmt->execute([$order_id, $user_id]);
+            if ($user_id) {
+                $stmt = $this->pdo->prepare("SELECT * FROM sales_order WHERE order_id = ? AND user_id = ?");
+                $stmt->execute([$order_id, $user_id]);
+            } else {
+                $stmt = $this->pdo->prepare("SELECT * FROM sales_order WHERE order_id = ?");
+                $stmt->execute([$order_id]);
+            }
             $order = $stmt->fetch();
             
             if (!$order) return null;
