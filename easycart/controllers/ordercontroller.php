@@ -7,7 +7,7 @@ class OrderController {
     
     public function __construct() {
         global $pdo;
-        require_once __DIR__ . '/../models/Order.php';
+        require_once __DIR__ . '/../models/order.php';
         $this->orderModel = new Order($pdo);
     }
     

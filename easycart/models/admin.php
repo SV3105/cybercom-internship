@@ -116,6 +116,19 @@ class Admin {
                 ORDER BY total_stock DESC
             ");
             $stats['category_stock'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Revenue Trend (Last 30 Days)
+            $stmt = $this->pdo->query("
+                SELECT 
+                    TO_CHAR(DATE(created_at), 'YYYY-MM-DD') as date,
+                    COALESCE(SUM(grand_total), 0) as revenue
+                FROM sales_order
+                WHERE status != 'cancelled' 
+                AND created_at >= CURRENT_DATE - INTERVAL '30 days'
+                GROUP BY DATE(created_at)
+                ORDER BY date ASC
+            ");
+            $stats['revenue_trend'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
         } catch (PDOException $e) {
             error_log("Dashboard stats error: " . $e->getMessage());

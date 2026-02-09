@@ -4,7 +4,7 @@
     </div>
 
     <div class="export-options" style="margin: 0 2rem;">
-        <form action="<?= BASE_URL ?>admin/product-save" method="POST" enctype="multipart/form-data" style="max-width: 800px; margin: 0 auto;">
+        <form action="<?= BASE_URL ?>admin/productsave" method="POST" enctype="multipart/form-data" style="max-width: 800px; margin: 0 auto;">
             <?php if ($product): ?>
                 <input type="hidden" name="entity_id" value="<?= $product['entity_id'] ?>">
                 <input type="hidden" name="current_image" value="<?= $product['image'] ?? '' ?>">

@@ -63,7 +63,7 @@
                                 ₹<?= number_format($order['grand_total'], 2) ?>
                             </td>
                             <td>
-                                <a href="<?= BASE_URL ?>admin/order-view?id=<?= $order['order_id'] ?>" class="action-btn btn-sm" style="background: white; color: #0891b2; border: 1px solid #bae6fd; box-shadow: none;">
+                                <a href="<?= BASE_URL ?>admin/orderview?id=<?= $order['order_id'] ?>" class="action-btn btn-sm" style="background: white; color: #0891b2; border: 1px solid #bae6fd; box-shadow: none;">
                                     View Details
                                 </a>
                             </td>

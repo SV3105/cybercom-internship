@@ -62,7 +62,7 @@
             <?php endif; ?>
         </div>
 
-        <a href="<?php echo $base_path; ?>product-details?id=<?php echo $product['id']; ?>" class="btn-view-details">View Details <i class="fas fa-chevron-right"></i></a>
+        <a href="<?php echo $base_path; ?>productdetails?id=<?php echo $product['id']; ?>" class="btn-view-details">View Details <i class="fas fa-chevron-right"></i></a>
 
     </div>
     <?php endforeach; 

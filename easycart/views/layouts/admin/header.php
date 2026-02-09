@@ -6,7 +6,7 @@
     <title><?= $title ?? 'Admin - EasyCart' ?></title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Montserrat:wght@600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="<?= BASE_URL ?>public/css/admin-auth.css">
+    <link rel="stylesheet" href="<?= BASE_URL ?>public/css/adminauth.css">
     <?php if (isset($extra_css)): ?>
         <link rel="stylesheet" href="<?= BASE_URL ?>public/css/<?= $extra_css ?>">
     <?php endif; ?>
@@ -59,7 +59,7 @@
 
                 <div class="nav-section">
                     <div class="nav-section-title">Management</div>
-                    <a href="<?= BASE_URL ?>admin/create-admin" class="nav-link <?= ($page ?? '') === 'create_admin' ? 'active' : '' ?>">
+                    <a href="<?= BASE_URL ?>admin/createadmin" class="nav-link <?= ($page ?? '') === 'createadmin' ? 'active' : '' ?>">
                         <i class="fas fa-user-plus"></i>
                         <span>Create Admin</span>
                     </a>

@@ -9,7 +9,7 @@
         </div>
         
         <div class="status-manager" style="background: white; padding: 1rem; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-            <form action="<?= BASE_URL ?>admin/order-status-update" method="POST" style="display: flex; gap: 0.5rem; align-items: center;" onsubmit="return confirm('Are you sure you want to update the status?');">
+            <form action="<?= BASE_URL ?>admin/orderstatusupdate" method="POST" style="display: flex; gap: 0.5rem; align-items: center;" onsubmit="return confirm('Are you sure you want to update the status?');">
                 <input type="hidden" name="order_id" value="<?= $order['order_id'] ?>">
                 <label style="font-weight: 600; color: #333; font-size: 0.9rem;">Status:</label>
                 <?php
@@ -155,7 +155,7 @@
 
                 <div class="order-notes-section" style="padding: 0; background: transparent; border: none; margin-top: 0;">
                     <h4 style="margin-bottom: 0.5rem; font-size: 0.95rem; color: #334155;">Internal Notes</h4>
-                    <form action="<?= BASE_URL ?>admin/order-save-notes" method="POST">
+                    <form action="<?= BASE_URL ?>admin/ordersavenotes" method="POST">
                         <input type="hidden" name="order_id" value="<?= $order['order_id'] ?>">
                         <textarea name="admin_notes" class="notes-textarea" placeholder="Add notes about this order..."><?= htmlspecialchars($order['admin_notes'] ?? '') ?></textarea>
                         <button type="submit" class="btn-primary" style="padding: 0.5rem 1rem; font-size: 0.85rem;">Save Notes</button>

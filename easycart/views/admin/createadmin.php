@@ -6,7 +6,7 @@
 
     <div class="admin-grid" style="margin: 0 2rem 2rem; max-width: 600px;">
         <div class="card">
-            <form action="<?= BASE_URL ?>admin/process-create-admin" method="POST">
+            <form action="<?= BASE_URL ?>admin/processcreateadmin" method="POST">
                 <div class="form-group" style="margin-bottom: 1.5rem;">
                     <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Full Name</label>
                     <input type="text" name="name" required class="admin-input" placeholder="e.g. John Doe" 

@@ -47,7 +47,7 @@
                                 Import Products
                             </button>
                             
-                            <a href="<?= BASE_URL ?>admin/export-download?template=true" style="display: inline-flex; align-items: center; gap: 0.75rem; background: white; color: #0f172a; padding: 1rem 2rem; border-radius: 12px; text-decoration: none; font-weight: 700; transition: all 0.3s ease; border: 2px solid #e2e8f0; font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                            <a href="<?= BASE_URL ?>admin/exportdownload?template=true" style="display: inline-flex; align-items: center; gap: 0.75rem; background: white; color: #0f172a; padding: 1rem 2rem; border-radius: 12px; text-decoration: none; font-weight: 700; transition: all 0.3s ease; border: 2px solid #e2e8f0; font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.5px;">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                                     <polyline points="7 10 12 15 17 10"></polyline>
@@ -224,7 +224,7 @@ importForm.addEventListener('submit', async function(e) {
     formData.append('csv_file', file);
     
     try {
-        const response = await fetch('<?= BASE_URL ?>admin/import-process', {
+        const response = await fetch('<?= BASE_URL ?>admin/importprocess', {
             method: 'POST',
             body: formData
         });
@@ -257,7 +257,7 @@ importForm.addEventListener('submit', async function(e) {
                         <div style="background: #fee2e2; padding: 1.5rem; border-radius: 12px; border-left: 4px solid #ef4444;">
                             <h4 style="margin: 0 0 1rem; color: #991b1b; font-weight: 700; font-family: 'Montserrat', sans-serif;">Failed Rows</h4>
                             <p style="margin: 0 0 1rem; color: #7f1d1d;">Some rows could not be imported. Download the failed rows CSV to see error details.</p>
-                            <a href="<?= BASE_URL ?>admin/download-failed?file=${result.results.failed_file}" style="display: inline-flex; align-items: center; gap: 0.5rem; background: #ef4444; color: white; padding: 0.75rem 1.5rem; border-radius: 8px; text-decoration: none; font-weight: 600;">
+                            <a href="<?= BASE_URL ?>admin/downloadfailed?file=${result.results.failed_file}" style="display: inline-flex; align-items: center; gap: 0.5rem; background: #ef4444; color: white; padding: 0.75rem 1.5rem; border-radius: 8px; text-decoration: none; font-weight: 600;">
                                 <i class="fas fa-download"></i>
                                 Download Failed Rows CSV
                             </a>

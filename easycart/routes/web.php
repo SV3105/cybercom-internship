@@ -9,19 +9,19 @@ return [
     
     // Products
     'products' => ['controller' => 'ProductController', 'method' => 'list'],
-    'product-details' => ['controller' => 'ProductController', 'method' => 'details'],
-    'product-search' => ['controller' => 'ProductController', 'method' => 'ajaxSearch'],
+    'productdetails' => ['controller' => 'ProductController', 'method' => 'details'],
+    'productsearch' => ['controller' => 'ProductController', 'method' => 'ajaxSearch'],
     
     // Order Routes
     'orders' => ['controller' => 'OrderController', 'method' => 'list'],
-    'order-details' => ['controller' => 'OrderController', 'method' => 'details'],
+    'orderdetails' => ['controller' => 'OrderController', 'method' => 'details'],
     'invoice' => ['controller' => 'OrderController', 'method' => 'invoice'],
     
     // Profile & Wishlist
     'profile' => ['controller' => 'ProfileController', 'method' => 'index'],
-    'profile-update' => ['controller' => 'ProfileController', 'method' => 'update'],
+    'profileupdate' => ['controller' => 'ProfileController', 'method' => 'update'],
     'wishlist' => ['controller' => 'ProfileController', 'method' => 'wishlist'],
-    'wishlist-action' => ['controller' => 'ProfileController', 'method' => 'wishlistAction'],
+    'wishlistaction' => ['controller' => 'ProfileController', 'method' => 'wishlistAction'],
     
     // Authentication
     'auth' => ['controller' => 'AuthController', 'method' => 'showLogin'],
@@ -34,26 +34,26 @@ return [
     
     // Checkout
     'checkout' => ['controller' => 'CheckoutController', 'method' => 'index'],
-    'place-order' => ['controller' => 'CheckoutController', 'method' => 'placeOrder'],
+    'placeorder' => ['controller' => 'CheckoutController', 'method' => 'placeOrder'],
     
     // Admin - Dashboard & CSV Import/Export
     'admin' => ['controller' => 'AdminController', 'method' => 'dashboard'],
     'admin/dashboard' => ['controller' => 'AdminController', 'method' => 'dashboard'],
     'admin/export' => ['controller' => 'AdminController', 'method' => 'exportPage'],
-    'admin/export-download' => ['controller' => 'AdminController', 'method' => 'exportProducts'],
+    'admin/exportdownload' => ['controller' => 'AdminController', 'method' => 'exportProducts'],
     'admin/import' => ['controller' => 'AdminController', 'method' => 'importPage'],
-    'admin/import-process' => ['controller' => 'AdminController', 'method' => 'handleImport'],
-    'admin/download-failed' => ['controller' => 'AdminController', 'method' => 'downloadFailed'],
+    'admin/importprocess' => ['controller' => 'AdminController', 'method' => 'handleImport'],
+    'admin/downloadfailed' => ['controller' => 'AdminController', 'method' => 'downloadFailed'],
     'admin/products' => ['controller' => 'AdminController', 'method' => 'products'],
     'admin/orders' => ['controller' => 'AdminController', 'method' => 'orders'],
-    'admin/product-delete' => ['controller' => 'AdminController', 'method' => 'deleteProduct'],
-    'admin/product-edit' => ['controller' => 'AdminController', 'method' => 'editProduct'],
-    'admin/product-save' => ['controller' => 'AdminController', 'method' => 'saveProduct'],
-    'admin/order-view' => ['controller' => 'AdminController', 'method' => 'orderDetails'],
-    'admin/order-status-update' => ['controller' => 'AdminController', 'method' => 'updateOrderStatus'],
-    'admin/order-save-notes' => ['controller' => 'AdminController', 'method' => 'saveOrderNotes'],
+    'admin/productdelete' => ['controller' => 'AdminController', 'method' => 'deleteProduct'],
+    'admin/productedit' => ['controller' => 'AdminController', 'method' => 'editProduct'],
+    'admin/productsave' => ['controller' => 'AdminController', 'method' => 'saveProduct'],
+    'admin/orderview' => ['controller' => 'AdminController', 'method' => 'orderDetails'],
+    'admin/orderstatusupdate' => ['controller' => 'AdminController', 'method' => 'updateOrderStatus'],
+    'admin/ordersavenotes' => ['controller' => 'AdminController', 'method' => 'saveOrderNotes'],
     'admin/profile' => ['controller' => 'AdminController', 'method' => 'profile'],
-    'admin/create-admin' => ['controller' => 'AdminController', 'method' => 'showCreateAdmin'],
-    'admin/process-create-admin' => ['controller' => 'AdminController', 'method' => 'handleCreateAdmin'],
+    'admin/createadmin' => ['controller' => 'AdminController', 'method' => 'showCreateAdmin'],
+    'admin/processcreateadmin' => ['controller' => 'AdminController', 'method' => 'handleCreateAdmin'],
 ];
 ?>

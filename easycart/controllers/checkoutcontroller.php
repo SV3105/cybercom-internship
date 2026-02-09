@@ -9,9 +9,9 @@ class CheckoutController {
     
     public function __construct() {
         global $pdo;
-        require_once __DIR__ . '/../models/Cart.php';
-        require_once __DIR__ . '/../models/Product.php';
-        require_once __DIR__ . '/../models/Order.php';
+        require_once __DIR__ . '/../models/cart.php';
+        require_once __DIR__ . '/../models/product.php';
+        require_once __DIR__ . '/../models/order.php';
         
         $this->cartModel = new Cart($pdo);
         $this->productModel = new Product($pdo);
@@ -96,6 +96,7 @@ class CheckoutController {
         }
         
         if (empty($_SESSION['cart'])) {
+             error_log("Checkout Debug: Cart is empty in session. Session ID: " . session_id() . " User ID: " . ($_SESSION['user']['id'] ?? 'none'));
              echo json_encode(['success' => false, 'message' => 'Cart is empty.']);
              exit;
         }
@@ -175,7 +176,10 @@ class CheckoutController {
              $current_session_id = session_id();
              $this->cartModel->syncCartToDb($user_id, [], $current_session_id);
             
-            echo json_encode(['success' => true, 'redirect' => 'order-details?id=' . $result['order_id']]); // Redirect to specific order details
+            echo json_encode([
+                'success' => true, 
+                'redirect' => 'orderdetails?id=' . $result['order_id']
+            ]);
         } else {
             echo json_encode(['success' => false, 'message' => 'Order placement failed: ' . $result['message']]);
         }

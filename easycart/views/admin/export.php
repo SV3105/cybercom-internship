@@ -15,7 +15,7 @@
                         </div>
                         <h3 style="margin: 0 0 0.75rem; font-size: 1.2rem; font-weight: 700; color: #0f172a; font-family: 'Montserrat', sans-serif;">All Products</h3>
                         <p style="margin: 0 0 1.5rem; color: #64748b; font-size: 0.9rem; line-height: 1.6;">Export complete product catalog with all details</p>
-                        <a href="<?= BASE_URL ?>admin/export-download" style="display: inline-flex; align-items: center; gap: 0.5rem; background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%); color: white; padding: 0.75rem 1.5rem; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 0.9rem; transition: all 0.3s; box-shadow: 0 4px 12px rgba(8, 145, 178, 0.3); text-transform: uppercase; letter-spacing: 0.5px;">
+                        <a href="<?= BASE_URL ?>admin/exportdownload" style="display: inline-flex; align-items: center; gap: 0.5rem; background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%); color: white; padding: 0.75rem 1.5rem; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 0.9rem; transition: all 0.3s; box-shadow: 0 4px 12px rgba(8, 145, 178, 0.3); text-transform: uppercase; letter-spacing: 0.5px;">
                             <i class="fas fa-download"></i>
                             Export All
                         </a>
@@ -28,7 +28,7 @@
                         </div>
                         <h3 style="margin: 0 0 0.75rem; font-size: 1.2rem; font-weight: 700; color: #0f172a; font-family: 'Montserrat', sans-serif;">Low Stock Only</h3>
                         <p style="margin: 0 0 1.5rem; color: #64748b; font-size: 0.9rem; line-height: 1.6;">Export products with stock quantity below 10</p>
-                        <a href="<?= BASE_URL ?>admin/export-download?filter=low_stock" style="display: inline-flex; align-items: center; gap: 0.5rem; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; padding: 0.75rem 1.5rem; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 0.9rem; transition: all 0.3s; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3); text-transform: uppercase; letter-spacing: 0.5px;">
+                        <a href="<?= BASE_URL ?>admin/exportdownload?filter=low_stock" style="display: inline-flex; align-items: center; gap: 0.5rem; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; padding: 0.75rem 1.5rem; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 0.9rem; transition: all 0.3s; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3); text-transform: uppercase; letter-spacing: 0.5px;">
                             <i class="fas fa-download"></i>
                             Export Low Stock
                         </a>
@@ -41,7 +41,7 @@
                         </div>
                         <h3 style="margin: 0 0 0.75rem; font-size: 1.2rem; font-weight: 700; color: #0f172a; font-family: 'Montserrat', sans-serif;">Featured Products</h3>
                         <p style="margin: 0 0 1.5rem; color: #64748b; font-size: 0.9rem; line-height: 1.6;">Export only featured/highlighted products</p>
-                        <a href="<?= BASE_URL ?>admin/export-download?filter=featured" style="display: inline-flex; align-items: center; gap: 0.5rem; background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white; padding: 0.75rem 1.5rem; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 0.9rem; transition: all 0.3s; box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3); text-transform: uppercase; letter-spacing: 0.5px;">
+                        <a href="<?= BASE_URL ?>admin/exportdownload?filter=featured" style="display: inline-flex; align-items: center; gap: 0.5rem; background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white; padding: 0.75rem 1.5rem; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 0.9rem; transition: all 0.3s; box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3); text-transform: uppercase; letter-spacing: 0.5px;">
                             <i class="fas fa-download"></i>
                             Export Featured
                         </a>
@@ -54,7 +54,7 @@
                         </div>
                         <h3 style="margin: 0 0 0.75rem; font-size: 1.2rem; font-weight: 700; color: #0f172a; font-family: 'Montserrat', sans-serif;">CSV Template</h3>
                         <p style="margin: 0 0 1.5rem; color: #64748b; font-size: 0.9rem; line-height: 1.6;">Download empty CSV template with sample data</p>
-                        <a href="<?= BASE_URL ?>admin/export-download?template=true" style="display: inline-flex; align-items: center; gap: 0.5rem; background: linear-gradient(135deg, #64748b 0%, #475569 100%); color: white; padding: 0.75rem 1.5rem; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 0.9rem; transition: all 0.3s; box-shadow: 0 4px 12px rgba(100, 116, 139, 0.3); text-transform: uppercase; letter-spacing: 0.5px;">
+                        <a href="<?= BASE_URL ?>admin/exportdownload?template=true" style="display: inline-flex; align-items: center; gap: 0.5rem; background: linear-gradient(135deg, #64748b 0%, #475569 100%); color: white; padding: 0.75rem 1.5rem; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 0.9rem; transition: all 0.3s; box-shadow: 0 4px 12px rgba(100, 116, 139, 0.3); text-transform: uppercase; letter-spacing: 0.5px;">
                             <i class="fas fa-download"></i>
                             Download Template
                         </a>

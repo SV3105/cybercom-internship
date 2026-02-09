@@ -394,7 +394,7 @@ class AdminController {
         $base_path = '';
 
         require_once __DIR__ . '/../views/layouts/admin/header.php';
-        require_once __DIR__ . '/../views/admin/product_form.php';
+        require_once __DIR__ . '/../views/admin/productform.php';
         require_once __DIR__ . '/../views/layouts/admin/footer.php';
     }
 
@@ -468,7 +468,7 @@ class AdminController {
         $base_path = '';
 
         require_once __DIR__ . '/../views/layouts/admin/header.php';
-        require_once __DIR__ . '/../views/admin/order_details.php';
+        require_once __DIR__ . '/../views/admin/orderdetails.php';
         require_once __DIR__ . '/../views/layouts/admin/footer.php';
     }
 
@@ -484,7 +484,7 @@ class AdminController {
             }
         }
 
-        header('Location: ' . BASE_URL . 'admin/order-view?id=' . $id);
+        header('Location: ' . BASE_URL . 'admin/orderview?id=' . $id);
         exit;
     }
 
@@ -506,7 +506,7 @@ class AdminController {
             }
         }
 
-        header('Location: ' . BASE_URL . 'admin/order-view?id=' . $id);
+        header('Location: ' . BASE_URL . 'admin/orderview?id=' . $id);
         exit;
     }
 
@@ -539,7 +539,7 @@ class AdminController {
         $base_path = '';
 
         require_once __DIR__ . '/../views/layouts/admin/header.php';
-        require_once __DIR__ . '/../views/admin/create_admin.php';
+        require_once __DIR__ . '/../views/admin/createadmin.php';
         require_once __DIR__ . '/../views/layouts/admin/footer.php';
     }
 
@@ -554,13 +554,13 @@ class AdminController {
 
         if (empty($name) || empty($email) || empty($password)) {
             setFlash('error', 'All fields are required.');
-            header('Location: ' . BASE_URL . 'admin/create-admin');
+            header('Location: ' . BASE_URL . 'admin/createadmin');
             exit;
         }
 
         if ($password !== $confirm_password) {
             setFlash('error', 'Passwords do not match.');
-            header('Location: ' . BASE_URL . 'admin/create-admin');
+            header('Location: ' . BASE_URL . 'admin/createadmin');
             exit;
         }
 
@@ -569,7 +569,7 @@ class AdminController {
             header('Location: ' . BASE_URL . 'admin/dashboard');
         } else {
             setFlash('error', 'Failed to create admin account. Email might already exist.');
-            header('Location: ' . BASE_URL . 'admin/create-admin');
+            header('Location: ' . BASE_URL . 'admin/createadmin');
         }
         exit;
     }

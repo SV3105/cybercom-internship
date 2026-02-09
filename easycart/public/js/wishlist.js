@@ -24,7 +24,7 @@ function toggleWishlist(productId, btn, isHome = false) {
         }
     }
 
-    const ajaxPath = 'wishlist-action';
+    const ajaxPath = 'wishlistaction';
 
     const formData = new FormData();
     formData.append('action', (isAdding || !isRemoveBtn && icon.classList.contains('fas')) ? 'add' : 'remove');

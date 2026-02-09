@@ -89,7 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function fetchResults(query) {
         try {
-            const response = await fetch(`${BASE_URL}product-search?q=${encodeURIComponent(query)}`);
+            const response = await fetch(`${BASE_URL}productsearch?q=${encodeURIComponent(query)}`);
             const data = await response.json();
             
             renderResults(data);
@@ -105,7 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         resultsContainer.innerHTML = products.map(p => `
-            <a href="${BASE_URL}product-details?id=${p.id}" class="search-result-item">
+            <a href="${BASE_URL}productdetails?id=${p.id}" class="search-result-item">
                 <img src="${BASE_URL}images/${p.image}" alt="${p.title}" class="search-result-img">
                 <div class="search-result-info">
                     <span class="search-result-title">${p.title}</span>

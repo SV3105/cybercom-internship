@@ -350,7 +350,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
-                    window.location.href = data.redirect || 'orders.php';
+                    window.location.href = data.redirect || 'orders';
                 } else {
                     alert('Order Failed: ' + data.message);
                 }

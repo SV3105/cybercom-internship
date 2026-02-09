@@ -44,20 +44,20 @@ if (isset($routes[$request_uri])) {
     $methodName = $route['method'];
     
     // Load the controller
-    $controllerFile = __DIR__ . '/../controllers/' . $controllerName . '.php';
+    $controllerFile = __DIR__ . '/../controllers/' . strtolower($controllerName) . '.php';
     
     if (file_exists($controllerFile)) {
         require_once $controllerFile;
         
         // Create controller instance based on controller type
      if ($controllerName === 'AdminController') {
-            require_once __DIR__ . '/../models/Product.php';
-            require_once __DIR__ . '/../models/Admin.php';
+            require_once __DIR__ . '/../models/product.php';
+            require_once __DIR__ . '/../models/admin.php';
             $productModel = new Product($pdo);
             $adminModel = new Admin($pdo);
             $controller = new $controllerName($productModel, $adminModel);
         } elseif ($controllerName === 'HomeController' || $controllerName === 'ProductController') {
-            require_once __DIR__ . '/../models/Product.php';
+            require_once __DIR__ . '/../models/product.php';
             $productModel = new Product($pdo);
             $controller = new $controllerName($productModel);
         } else {

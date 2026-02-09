@@ -8,8 +8,8 @@ class AuthController {
     
     public function __construct() {
         global $pdo;
-        require_once __DIR__ . '/../models/User.php';
-        require_once __DIR__ . '/../models/Admin.php';
+        require_once __DIR__ . '/../models/user.php';
+        require_once __DIR__ . '/../models/admin.php';
         $this->userModel = new User($pdo);
         $this->adminModel = new Admin($pdo);
     }
@@ -131,7 +131,7 @@ class AuthController {
         // Deactivate Cart if user was logged in
         if (isset($_SESSION['user']['id'])) {
              global $pdo;
-             require_once __DIR__ . '/../models/Cart.php';
+             require_once __DIR__ . '/../models/cart.php';
              $cartModel = new Cart($pdo);
              $cartModel->deactivateUserCart($_SESSION['user']['id']);
         }

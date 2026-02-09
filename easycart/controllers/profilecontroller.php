@@ -1,9 +1,9 @@
 <?php
 // controllers/ProfileController.php
 
-require_once __DIR__ . '/../models/User.php';
-require_once __DIR__ . '/../models/Order.php';
-require_once __DIR__ . '/../models/Product.php';
+require_once __DIR__ . '/../models/user.php';
+require_once __DIR__ . '/../models/order.php';
+require_once __DIR__ . '/../models/product.php';
 
 class ProfileController {
     private $pdo;
@@ -19,7 +19,7 @@ class ProfileController {
         $this->orderModel = new Order($pdo);
         $this->productModel = new Product($pdo);
         // Load Wishlist Model
-        require_once __DIR__ . '/../models/Wishlist.php';
+        require_once __DIR__ . '/../models/wishlist.php';
         $this->wishlistModel = new Wishlist($pdo);
     }
 

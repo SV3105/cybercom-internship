@@ -246,7 +246,7 @@ function placeOrder() {
     }
     
     // Submit to backend
-    fetch('place-order', {
+    fetch('placeorder', {
         method: 'POST',
         body: orderData,
         headers: {
@@ -262,6 +262,8 @@ function placeOrder() {
             // Redirect to orders page
             if (data.redirect) {
                 window.location.href = data.redirect;
+            } else if (data.order_id) {
+                window.location.href = 'orderdetails?id=' + data.order_id;
             } else {
                 window.location.href = 'orders';
             }

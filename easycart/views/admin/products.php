@@ -78,10 +78,10 @@
                             </td>
                             <td>
                                 <div style="display: flex; gap: 0.5rem;">
-                                    <a href="<?= BASE_URL ?>admin/product-edit?id=<?= $product['entity_id'] ?>" class="action-btn btn-sm" style="background: white; color: #0891b2; border: 1px solid #bae6fd; box-shadow: none;">
+                                    <a href="<?= BASE_URL ?>admin/productedit?id=<?= $product['entity_id'] ?>" class="action-btn btn-sm" style="background: white; color: #0891b2; border: 1px solid #bae6fd; box-shadow: none;">
                                         <i class="fas fa-edit"></i>
                                     </a>
-                                    <a href="<?= BASE_URL ?>admin/product-delete?id=<?= $product['entity_id'] ?>" class="action-btn btn-sm" style="background: white; color: #ef4444; border: 1px solid #fecaca; box-shadow: none;" onclick="return confirm('Are you sure you want to delete this product?');">
+                                    <a href="<?= BASE_URL ?>admin/productdelete?id=<?= $product['entity_id'] ?>" class="action-btn btn-sm" style="background: white; color: #ef4444; border: 1px solid #fecaca; box-shadow: none;" onclick="return confirm('Are you sure you want to delete this product?');">
                                         <i class="fas fa-trash"></i>
                                     </a>
                                 </div>

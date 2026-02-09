@@ -8,8 +8,8 @@ class CartController {
     
     public function __construct() {
         global $pdo;
-        require_once __DIR__ . '/../models/Cart.php';
-        require_once __DIR__ . '/../models/Product.php';
+        require_once __DIR__ . '/../models/cart.php';
+        require_once __DIR__ . '/../models/product.php';
         $this->cartModel = new Cart($pdo);
         $this->productModel = new Product($pdo); // For product data access
     }

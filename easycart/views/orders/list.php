@@ -58,7 +58,7 @@
                 
                 <div class="order-actions" style="margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid #f0f0f0; display: flex; gap: 1rem; flex-wrap: wrap;">
                     <!-- Updated Link -->
-                    <a href="order-details?id=<?php echo $order['db_id']; ?>" class="btn-action btn-primary-action" style="background: #4f46e5; color: white; border: none;">
+                    <a href="orderdetails?id=<?php echo $order['db_id']; ?>" class="btn-action btn-primary-action" style="background: #4f46e5; color: white; border: none;">
                         <i class="fas fa-box-open"></i> View Details
                     </a>
                     <!-- NOTE: Invoice PHP likely not refactored yet, keep generic or update if needed. Keeping as is but assume relative path -->

@@ -138,6 +138,27 @@
         </div>
     </div>
 
+    <!-- Revenue Trend Chart -->
+    <div class="dashboard-card" style="grid-column: span 2;">
+        <div class="card-header">
+            <h2>📈 Revenue Trend (Last 30 Days)</h2>
+            <div class="revenue-summary">
+                <span class="text-muted">Avg. Daily:</span>
+                <?php 
+                    $trendData = $stats['revenue_trend'] ?? [];
+                    $totalTrend = array_sum(array_column($trendData, 'revenue'));
+                    $avgTrend = count($trendData) > 0 ? $totalTrend / count($trendData) : 0;
+                ?>
+                <strong>₹<?= number_format($avgTrend, 2) ?></strong>
+            </div>
+        </div>
+        <div class="chart-container-wrapper">
+            <div class="chart-container" style="height: 350px;">
+                <canvas id="revenueChart"></canvas>
+            </div>
+        </div>
+    </div>
+
     <!-- Inventory Stock Chart -->
     <div class="dashboard-card" style="grid-column: span 2;">
         <div class="card-header">
@@ -252,6 +273,101 @@ document.addEventListener('DOMContentLoaded', function() {
                     },
                     cornerRadius: 8,
                     displayColors: false
+                }
+            }
+        }
+    });
+
+    // Revenue Trend Chart
+    const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+    const revenueTrend = <?= json_encode($stats['revenue_trend'] ?? []) ?>;
+    
+    const revLabels = revenueTrend.map(item => {
+        const date = new Date(item.date);
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    });
+    const revData = revenueTrend.map(item => parseFloat(item.revenue));
+    
+    const gradient = revenueCtx.createLinearGradient(0, 0, 0, 400);
+    gradient.addColorStop(0, 'rgba(16, 185, 129, 0.2)');
+    gradient.addColorStop(1, 'rgba(16, 185, 129, 0)');
+
+    new Chart(revenueCtx, {
+        type: 'line',
+        data: {
+            labels: revLabels,
+            datasets: [{
+                label: 'Daily Revenue',
+                data: revData,
+                borderColor: '#10b981',
+                backgroundColor: gradient,
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4,
+                pointRadius: 4,
+                pointBackgroundColor: '#fff',
+                pointBorderColor: '#10b981',
+                pointHoverRadius: 6,
+                pointHoverBackgroundColor: '#10b981',
+                pointHoverBorderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                intersect: false,
+                mode: 'index'
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: '#f1f5f9',
+                        drawBorder: false
+                    },
+                    ticks: {
+                        callback: value => '₹' + value.toLocaleString(),
+                        font: { size: 11 },
+                        color: '#64748b'
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        font: { size: 11 },
+                        color: '#64748b',
+                        maxRotation: 0,
+                        autoSkip: true,
+                        maxTicksLimit: 10
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    padding: 12,
+                    backgroundColor: '#0f172a',
+                    titleFont: {
+                        family: "'Montserrat', sans-serif",
+                        size: 14,
+                        weight: '700'
+                    },
+                    bodyFont: {
+                        family: "'Inter', sans-serif",
+                        size: 13
+                    },
+                    cornerRadius: 8,
+                    displayColors: false,
+                    callbacks: {
+                        label: function(context) {
+                            return 'Revenue: ₹' + context.parsed.y.toLocaleString(undefined, {minimumFractionDigits: 2});
+                        }
+                    }
                 }
             }
         }
