@@ -36,5 +36,22 @@ return [
     'checkout' => ['controller' => 'CheckoutController', 'method' => 'index'],
     'place-order' => ['controller' => 'CheckoutController', 'method' => 'placeOrder'],
     
+    // Admin - Dashboard & CSV Import/Export
+    'admin' => ['controller' => 'AdminController', 'method' => 'dashboard'],
+    'admin/dashboard' => ['controller' => 'AdminController', 'method' => 'dashboard'],
+    'admin/export' => ['controller' => 'AdminController', 'method' => 'exportPage'],
+    'admin/export-download' => ['controller' => 'AdminController', 'method' => 'exportProducts'],
+    'admin/import' => ['controller' => 'AdminController', 'method' => 'importPage'],
+    'admin/import-process' => ['controller' => 'AdminController', 'method' => 'handleImport'],
+    'admin/download-failed' => ['controller' => 'AdminController', 'method' => 'downloadFailed'],
+    'admin/products' => ['controller' => 'AdminController', 'method' => 'products'],
+    'admin/orders' => ['controller' => 'AdminController', 'method' => 'orders'],
+    'admin/product-delete' => ['controller' => 'AdminController', 'method' => 'deleteProduct'],
+    'admin/product-edit' => ['controller' => 'AdminController', 'method' => 'editProduct'],
+    'admin/product-save' => ['controller' => 'AdminController', 'method' => 'saveProduct'],
+    'admin/order-view' => ['controller' => 'AdminController', 'method' => 'orderDetails'],
+    'admin/order-status-update' => ['controller' => 'AdminController', 'method' => 'updateOrderStatus'],
+    'admin/order-save-notes' => ['controller' => 'AdminController', 'method' => 'saveOrderNotes'],
+    'admin/profile' => ['controller' => 'AdminController', 'method' => 'profile'],
 ];
 ?>

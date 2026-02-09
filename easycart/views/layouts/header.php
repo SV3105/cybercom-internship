@@ -39,7 +39,12 @@
             <ul class="nav-icons">
                 <!-- Profile Icon -->
                 <li>
-                    <?php if(isset($_SESSION['user'])): ?>
+                    <?php if(isset($_SESSION['admin_user'])): ?>
+                        <a href="<?php echo BASE_URL; ?>admin" class="nav-icon-link <?php echo ($page === 'admin') ? 'active-nav' : ''; ?>" title="Admin Dashboard">
+                            <i class="fas fa-chart-line"></i>
+                            <span>Admin</span>
+                        </a>
+                    <?php elseif(isset($_SESSION['user'])): ?>
                         <a href="<?php echo BASE_URL; ?>profile" class="nav-icon-link <?php echo ($page === 'profile') ? 'active-nav' : ''; ?>" title="Profile">
                             <i class="far fa-user"></i>
                             <span>Profile</span>
@@ -47,7 +52,7 @@
                     <?php else: ?>
                         <a href="<?php echo BASE_URL; ?>auth" class="nav-icon-link <?php echo ($page === 'auth') ? 'active-nav' : ''; ?>" title="Login">
                             <i class="far fa-user"></i>
-                            <span>Profile</span>
+                            <span>Login</span>
                         </a>
                     <?php endif; ?>
                 </li>
@@ -81,7 +86,7 @@
                 </li>
 
                 <!-- Login Icon (only for logged-out users) -->
-                <?php if(!isset($_SESSION['user'])): ?>
+                <?php if(!isset($_SESSION['user']) && !isset($_SESSION['admin_user'])): ?>
                     <li>
                         <a href="<?php echo BASE_URL; ?>auth" class="nav-icon-link nav-login-btn" title="Login">
                             <i class="fas fa-sign-in-alt"></i>
@@ -91,7 +96,7 @@
                 <?php endif; ?>
 
                 <!-- Logout Icon (only for logged-in users) -->
-                <?php if(isset($_SESSION['user'])): ?>
+                <?php if(isset($_SESSION['user']) || isset($_SESSION['admin_user'])): ?>
                     <li>
                         <a href="<?php echo BASE_URL; ?>logout" class="nav-icon-link nav-logout-btn" title="Logout">
                             <i class="fas fa-sign-out-alt"></i>

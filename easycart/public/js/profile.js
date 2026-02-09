@@ -25,22 +25,16 @@ document.addEventListener('DOMContentLoaded', function() {
             gradient.addColorStop(1, 'rgba(99, 102, 241, 0.05)');
 
             new Chart(chartContext, {
-                type: 'line',
+                type: 'bar',
                 data: {
                     labels: labels,
                     datasets: [{
                         label: 'Spending',
                         data: amounts,
-                        borderColor: '#6366f1',
-                        borderWidth: 3,
-                        pointBackgroundColor: '#fff',
-                        pointBorderColor: '#6366f1',
-                        pointBorderWidth: 2,
-                        pointRadius: 5,
-                        pointHoverRadius: 7,
-                        tension: 0.4,
-                        fill: true,
-                        backgroundColor: gradient
+                        backgroundColor: '#6366f1',
+                        hoverBackgroundColor: '#4f46e5',
+                        borderRadius: 6,
+                        barPercentage: 0.6
                     }]
                 },
                 options: {

@@ -4,12 +4,14 @@
 
 class AuthController {
     private $userModel;
+    private $adminModel;
     
     public function __construct() {
         global $pdo;
         require_once __DIR__ . '/../models/User.php';
-        //__DIR__ : This is a special PHP "magic constant". It returns the exact folder path of the file currently running.
+        require_once __DIR__ . '/../models/Admin.php';
         $this->userModel = new User($pdo);
+        $this->adminModel = new Admin($pdo);
     }
     
     /**
@@ -17,7 +19,7 @@ class AuthController {
      */
     public function showLogin() {
         // If already logged in, redirect to profile
-        if (isset($_SESSION['user'])) {
+        if (isset($_SESSION['user']) || isset($_SESSION['admin_user'])) {
             header("Location: profile");
             exit;
         }
@@ -54,23 +56,34 @@ class AuthController {
         $user = $this->userModel->login($email, $password);
         
         if ($user) {
-            // Login Success
-            session_regenerate_id(true); // new session ID
-             $_SESSION['user'] = [
+            // User Login Success
+            session_regenerate_id(true);
+            $_SESSION['user'] = [
                 'id' => $user['id'],
                 'name' => $user['name'],
                 'email' => $user['email'],
                 'phone' => $user['phone'],
                 'location' => $user['location']
             ];
-            
-            // Sync valid cart from session to DB if needed
-            // This logic was in cart.php, we might need a way to trigger it or just rely on next page load
-            
             echo json_encode(['success' => true]);
-        } else {
-            echo json_encode(['success' => false, 'message' => 'Invalid email or password.']);
+            exit;
+        } 
+        
+        // If regular user fails, check if admin
+        $admin = $this->adminModel->login($email, $password);
+        if ($admin) {
+            // Admin Login Success
+            session_regenerate_id(true);
+            $_SESSION['admin_user'] = [
+                'id' => $admin['id'],
+                'name' => $admin['name'],
+                'email' => $admin['email']
+            ];
+            echo json_encode(['success' => true, 'is_admin' => true]);
+            exit;
         }
+
+        echo json_encode(['success' => false, 'message' => 'Invalid email or password.']);
         exit;
     }
     
@@ -124,7 +137,8 @@ class AuthController {
         }
 
         // Unset all session variables
-        $_SESSION = [];
+        unset($_SESSION['user']);
+        unset($_SESSION['admin_user']);
         
         // Destroy the session
         session_destroy();
@@ -133,8 +147,7 @@ class AuthController {
         session_start();
         session_regenerate_id(true); // Critical: Force new ID
         
-        header("Location: is_home"); // Will rely on .htaccess/routing to handle empty path or redirect to home
-        header("Location: ./");
+        header("Location: auth");
         exit;
     }
 }

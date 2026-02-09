@@ -21,4 +21,27 @@ try {
     // In production, log this instead of showing it
     die("Database Connection Failed: " . $e->getMessage());
 }
+
+if (!function_exists('setFlash')) {
+    function setFlash($type, $message) {
+        $_SESSION['flash'] = [
+            'type' => $type,
+            'message' => $message
+        ];
+    }
+}
+
+/**
+ * Get and clear the flash message from the session
+ */
+if (!function_exists('getFlash')) {
+    function getFlash() {
+        if (isset($_SESSION['flash'])) {
+            $flash = $_SESSION['flash'];
+            unset($_SESSION['flash']);
+            return $flash;
+        }
+        return null;
+    }
+}
 ?>

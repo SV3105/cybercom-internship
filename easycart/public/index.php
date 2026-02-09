@@ -50,7 +50,13 @@ if (isset($routes[$request_uri])) {
         require_once $controllerFile;
         
         // Create controller instance based on controller type
-        if ($controllerName === 'HomeController' || $controllerName === 'ProductController') {
+     if ($controllerName === 'AdminController') {
+            require_once __DIR__ . '/../models/Product.php';
+            require_once __DIR__ . '/../models/Admin.php';
+            $productModel = new Product($pdo);
+            $adminModel = new Admin($pdo);
+            $controller = new $controllerName($productModel, $adminModel);
+        } elseif ($controllerName === 'HomeController' || $controllerName === 'ProductController') {
             require_once __DIR__ . '/../models/Product.php';
             $productModel = new Product($pdo);
             $controller = new $controllerName($productModel);
@@ -58,6 +64,7 @@ if (isset($routes[$request_uri])) {
             // For other controllers, we'll add proper initialization later
             $controller = new $controllerName();
         }
+        
         
         // Call the method
         if (method_exists($controller, $methodName)) {
