@@ -4,7 +4,8 @@
         <div class="hero-content">
             <span class="badge">SEASONAL OFFER</span>
             <h2>Style Meets <br>Innovation</h2>
-            <p>Discover the latest trends in fashion and technology with exclusive deals.</p>
+            <?php global $site_settings; ?>
+            <p><?= htmlspecialchars($site_settings['hero_banner_text'] ?? 'Discover the latest trends in fashion and technology with exclusive deals.') ?></p>
             <div class="hero-btns">
                 <a href="<?php echo BASE_URL; ?>products" class="btn">Shop Now</a>
                 <a href="<?php echo BASE_URL; ?>products?category=fashion" class="btn btn-outline">Trending</a>

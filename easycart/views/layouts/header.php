@@ -13,6 +13,21 @@
     <?php if(isset($extra_css_2)): ?>
     <link rel="stylesheet" href="<?php echo BASE_URL; ?>css/<?php echo $extra_css_2; ?>?v=<?php echo $v; ?>">
     <?php endif; ?>
+    
+    <style>
+        :root {
+            <?php 
+                global $site_settings;
+                echo "--primary-color: " . ($site_settings['primary_color'] ?? '#0ea5e9') . ";\n";
+                echo "            --secondary-color: " . ($site_settings['secondary_color'] ?? '#f1f5f9') . ";\n";
+            ?>
+        }
+        
+        /* Apply dynamic primary color to basic components */
+        .btn-primary, .action-btn { background-color: var(--primary-color) !important; color: white !important; }
+        .logo h1 { color: var(--primary-color) !important; }
+        .active-nav, .nav-links a:hover { color: var(--primary-color) !important; }
+    </style>
 </head>
 <body>
     <header>
@@ -26,7 +41,10 @@
             <ul class="nav-links">
                 <li><a href="<?php echo BASE_URL; ?>" class="<?php echo ($page === 'home') ? 'active-nav' : ''; ?>">HOME</a></li>
                 <li><a href="<?php echo BASE_URL; ?>products" class="<?php echo ($page === 'products') ? 'active-nav' : ''; ?>">COLLECTIONS</a></li>
+                <li><a href="<?php echo BASE_URL; ?>sell" class="<?php echo ($page === 'sell') ? 'active-nav' : ''; ?>">BECOME A VENDOR</a></li>
+                <?php if(!isset($_SESSION['admin_user'])): ?>
                 <li><a href="<?php echo BASE_URL; ?>orders" class="<?php echo ($page === 'orders') ? 'active-nav' : ''; ?>">ORDERS</a></li>
+                <?php endif; ?>
             </ul>
 
             <!-- Search Bar (Center-Right) -->
@@ -58,6 +76,7 @@
                 </li>
 
                 <!-- Wishlist Icon -->
+                <?php if(!isset($_SESSION['admin_user'])): ?>
                 <li>
                     <a href="<?php echo BASE_URL; ?>wishlist" class="nav-icon-link <?php echo ($page === 'wishlist') ? 'active-nav' : ''; ?>" title="Wishlist">
                         <i class="far fa-heart"></i>
@@ -69,7 +88,7 @@
                             <?php echo $wishlist_count; ?>
                         </span>
                     </a>
-                </li>
+                </li> 
 
                 <!-- Cart/Bag Icon -->
                 <li>
@@ -84,6 +103,7 @@
                         </span>
                     </a>
                 </li>
+                <?php endif; ?>
 
                 <!-- Login Icon (only for logged-out users) -->
                 <?php if(!isset($_SESSION['user']) && !isset($_SESSION['admin_user'])): ?>

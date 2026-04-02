@@ -24,6 +24,11 @@ class CartController {
         // We'll follow the original logic.
         $isAjaxRequest = isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
 
+        if (isset($_SESSION['admin_user'])) {
+            header("Location: admin/dashboard");
+            exit;
+        }
+
         if (!isset($_SESSION['user']) && !$isAjaxRequest) {
             header("Location: auth");
             exit;
@@ -104,7 +109,7 @@ class CartController {
                 } else {
                     unset($_SESSION['cart'][$p_id]);
                 }
-                $response = $this->finalizeUpdate();
+                $response = $this->finalizeUpdate(true);
                 break;
                 
             case 'update': // Set absolute quantity

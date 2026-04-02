@@ -15,6 +15,12 @@ class OrderController {
      * List user orders
      */
     public function list() {
+        // Redirect admin away from shop orders
+        if (isset($_SESSION['admin_user'])) {
+            header("Location: admin/dashboard");
+            exit;
+        }
+
         // Auth Check
         if (!isset($_SESSION['user'])) {
             header("Location: auth");
@@ -86,6 +92,12 @@ class OrderController {
      * View order details
      */
     public function details() {
+        // Redirect admin away from shop orders
+        if (isset($_SESSION['admin_user'])) {
+            header("Location: admin/dashboard");
+            exit;
+        }
+
         // Auth Check
         if (!isset($_SESSION['user'])) {
             header("Location: auth");

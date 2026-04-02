@@ -29,5 +29,16 @@ class HomeController {
         require_once __DIR__ . '/../views/home/home.php';
         require_once __DIR__ . '/../views/layouts/footer.php';
     }
+
+    public function sell() {
+        $title = "Sell on EasyCart - Become a Vendor";
+        $page = "sell";
+        $extra_css = "sell.css";
+        $base_path = '';
+        
+        require_once __DIR__ . '/../views/layouts/header.php';
+        require_once __DIR__ . '/../views/home/sell.php';
+        require_once __DIR__ . '/../views/layouts/footer.php';
+    }
 }
 ?>

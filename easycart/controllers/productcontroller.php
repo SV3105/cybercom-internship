@@ -22,10 +22,11 @@ class ProductController {
         // 1. Capture Filter Inputs
         $selected_categories = isset($_GET['category']) ? (array)$_GET['category'] : [];
         $selected_brands = isset($_GET['brand']) ? (array)$_GET['brand'] : [];
+        $selected_stores = isset($_GET['store']) ? (array)$_GET['store'] : [];
         $search_query = isset($_GET['search']) ? trim($_GET['search']) : '';
         
         // 2. Filter Logic
-        $filtered_products = array_filter($products, function($product) use ($selected_categories, $selected_brands, $search_query) {
+        $filtered_products = array_filter($products, function($product) use ($selected_categories, $selected_brands, $selected_stores, $search_query) {
             // 1. Check Category (Multi-support)
             $productCats = $product['categories'] ?? [$product['category']];
             $cat_match = empty($selected_categories) || !empty(array_intersect((array)$productCats, $selected_categories));
@@ -33,6 +34,9 @@ class ProductController {
             // 2. Check Brand (Multi-support)
             $productBrands = $product['brands'] ?? [$product['brand']];
             $brand_match = empty($selected_brands) || !empty(array_intersect((array)$productBrands, $selected_brands));
+            
+            // 2.5 Check Store
+            $store_match = empty($selected_stores) || in_array($product['vendor_id'], $selected_stores);
             
             // 3. Check Search
             $search_match = true;
@@ -85,8 +89,10 @@ class ProductController {
                 }
             }
             
-            return $cat_match && $brand_match && $search_match;
+            return $cat_match && $brand_match && $store_match && $search_match;
         });
+        
+        $vendorsList = $this->productModel->getAllVendors();
         
         // --- PAGINATION LOGIC ---
         $limit = 16; // Products per page

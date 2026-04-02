@@ -34,35 +34,19 @@
                 </div>
                 
                 <div class="nav-section">
-                    <div class="nav-section-title">Products</div>
-                    <a href="<?= BASE_URL ?>admin/import" class="nav-link <?= ($page ?? '') === 'import' ? 'active' : '' ?>">
-                        <i class="fas fa-file-import"></i>
-                        <span>Import Products</span>
+                    <div class="nav-section-title">Marketplace</div>
+                    <a href="<?= BASE_URL ?>admin/vendors" class="nav-link <?= ($page ?? '') === 'vendors' ? 'active' : '' ?>">
+                        <i class="fas fa-store"></i>
+                        <span>Vendors</span>
                     </a>
-                    <a href="<?= BASE_URL ?>admin/export" class="nav-link <?= ($page ?? '') === 'export' ? 'active' : '' ?>">
-                        <i class="fas fa-file-export"></i>
-                        <span>Export Products</span>
+                    <a href="<?= BASE_URL ?>admin/users" class="nav-link <?= ($page ?? '') === 'users' ? 'active' : '' ?>">
+                        <i class="fas fa-users"></i>
+                        <span>Users</span>
                     </a>
                 </div>
                 
                 <div class="nav-section">
-                    <div class="nav-section-title">Quick Links</div>
-                    <a href="<?= BASE_URL ?>admin/products" class="nav-link <?= ($page ?? '') === 'products' ? 'active' : '' ?>">
-                        <i class="fas fa-box-open"></i>
-                        <span>Products</span>
-                    </a>
-                    <a href="<?= BASE_URL ?>admin/orders" class="nav-link <?= ($page ?? '') === 'orders' ? 'active' : '' ?>">
-                        <i class="fas fa-shopping-cart"></i>
-                        <span>Orders</span>
-                    </a>
-                </div>
-
-                <div class="nav-section">
                     <div class="nav-section-title">Management</div>
-                    <a href="<?= BASE_URL ?>admin/createadmin" class="nav-link <?= ($page ?? '') === 'createadmin' ? 'active' : '' ?>">
-                        <i class="fas fa-user-plus"></i>
-                        <span>Create Admin</span>
-                    </a>
                     <a href="<?= BASE_URL ?>" class="nav-link">
                         <i class="fas fa-home"></i>
                         <span>Back to Store</span>

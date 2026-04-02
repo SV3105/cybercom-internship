@@ -44,6 +44,20 @@
                             </div>
                         </div>
 
+                        <div class="filter-group">
+                            <h3>Stores</h3>
+                            <div class="filter-scroll">
+                            <?php 
+                            foreach($vendorsList as $vendor):
+                            ?>
+                            <label class="filter-option">
+                                <input type="checkbox" name="store[]" value="<?php echo $vendor['id']; ?>" <?php echo in_array($vendor['id'], $selected_stores) ? 'checked' : ''; ?>>
+                                <span class="checkmark"></span> <?php echo htmlspecialchars($vendor['store_name']); ?>
+                            </label>
+                            <?php endforeach; ?>
+                            </div>
+                        </div>
+
                         <a href="products" class="btn-clear-filters">
                             <i class="fas fa-times"></i> Clear Filters
                         </a>

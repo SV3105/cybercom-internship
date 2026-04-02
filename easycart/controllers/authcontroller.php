@@ -19,7 +19,11 @@ class AuthController {
      */
     public function showLogin() {
         // If already logged in, redirect to profile
-        if (isset($_SESSION['user']) || isset($_SESSION['admin_user'])) {
+        if (isset($_SESSION['admin_user'])) {
+            header("Location: admin/dashboard");
+            exit;
+        }
+        if (isset($_SESSION['user'])) {
             header("Location: profile");
             exit;
         }
@@ -57,7 +61,11 @@ class AuthController {
         
         if ($user) {
             // User Login Success
+            $guest_session_id = session_id(); // Capture before regenerate
+            
             session_regenerate_id(true);
+            $new_session_id = session_id();
+            
             $_SESSION['user'] = [
                 'id' => $user['id'],
                 'name' => $user['name'],
@@ -65,6 +73,22 @@ class AuthController {
                 'phone' => $user['phone'],
                 'location' => $user['location']
             ];
+
+            // --- SYNC / MERGE CART ---
+            require_once __DIR__ . '/../models/cart.php';
+            $cartModel = new Cart($GLOBALS['pdo']);
+            
+            // 1. Merge Guest Cart to User in DB
+            $cartModel->mergeCarts($user['id'], $guest_session_id);
+            
+            // 2. Load the Merged state from DB into Session
+            // This ensures guest items + previous items are all present
+            $merged_cart = $cartModel->loadCartFromDb($user['id']);
+            $_SESSION['cart'] = $merged_cart;
+
+            // 3. Final sync to update session_id in DB to new restricted ID
+            $cartModel->syncCartToDb($user['id'], $merged_cart, $new_session_id);
+
             echo json_encode(['success' => true]);
             exit;
         } 

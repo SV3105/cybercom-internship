@@ -159,23 +159,41 @@ class Cart {
             // Promo Discount
             $promo_discount = 0;
             if ($promo_code) {
-                // Fetch from DB
-                $stmtCoupon = $this->pdo->prepare("SELECT percentage FROM sales_coupons WHERE promo_code = ?");
-                $stmtCoupon->execute([$promo_code]);
-                $coupon_percent = $stmtCoupon->fetchColumn();
+                $stmtC = $this->pdo->prepare("SELECT * FROM vendor_coupons WHERE code = ? AND is_active = TRUE AND (valid_until IS NULL OR valid_until > NOW())");
+                $stmtC->execute([$promo_code]);
+                $coupon = $stmtC->fetch(PDO::FETCH_ASSOC);
 
-                if ($coupon_percent !== false) {
-                     $percent = (int)$coupon_percent;
-                     // Promo applies to subtotal + shipping (per existing logic)
-                     $base_for_promo = $calculated_subtotal + $shipping_cost;
-                     $promo_discount = $base_for_promo * ($percent / 100);
+                if ($coupon) {
+                     $vendor_id = $coupon['vendor_id'];
                      
-                     // If promo applied, smart discount is overridden
-                     if ($promo_discount > 0) {
+                     // Need products_data to find vendor items
+                     $stmtAllP = $this->pdo->query("SELECT entity_id as id, price, vendor_id FROM catalog_product_entity");
+                     $products_data = $stmtAllP->fetchAll(PDO::FETCH_ASSOC);
+                     
+                     $vendor_subtotal = 0;
+                     foreach($cart as $p_id => $qty) {
+                         if ($qty <= 0) continue;
+                         foreach($products_data as $p) {
+                             if($p['id'] == $p_id && $p['vendor_id'] == $vendor_id) {
+                                  $price_val = (float)str_replace(',', '', $p['price']);
+                                  $vendor_subtotal += $price_val * $qty;
+                                  break;
+                             }
+                         }
+                     }
+                     
+                     if ($vendor_subtotal > 0 && $vendor_subtotal >= $coupon['min_order_amount']) {
+                         if ($coupon['discount_type'] === 'percent') {
+                             $promo_discount = $vendor_subtotal * ($coupon['discount_value'] / 100);
+                         } else {
+                             $promo_discount = min($vendor_subtotal, $coupon['discount_value']);
+                         }
                          $smart_discount = 0;
+                     } else {
+                         $promo_code = null;
                      }
                 } else {
-                    $promo_code = null; // Invalid code
+                    $promo_code = null;
                 }
             }
             
@@ -250,24 +268,43 @@ class Cart {
         $promo_discount = 0;
         $promo_message = "";
         if ($promo_code) {
-            // DB Fetch
-            // Note: calculateTotals is sometimes called without full DB context check in pure utilities, 
-            // but here $this->pdo is available.
             try {
-                $stmtC = $this->pdo->prepare("SELECT percentage, promo_message FROM sales_coupons WHERE promo_code = ?");
+                $stmtC = $this->pdo->prepare("SELECT * FROM vendor_coupons WHERE code = ? AND is_active = TRUE AND (valid_until IS NULL OR valid_until > NOW())");
                 $stmtC->execute([$promo_code]);
-                $coupon = $stmtC->fetch();
+                $coupon = $stmtC->fetch(PDO::FETCH_ASSOC);
                 
                 if ($coupon) {
-                     $percent = (int)$coupon['percentage'];
-                     $base_for_promo = $subtotal + $shipping_cost;
-                     $promo_discount = $base_for_promo * ($percent / 100);
-                     $promo_message = $coupon['promo_message']; // Use DB message
+                     $vendor_id = $coupon['vendor_id'];
                      
-                     if ($promo_discount > 0) {
-                         $smart_discount = 0;
-                         $reason = ""; 
+                     // Calculate subtotal ONLY for this vendor's items
+                     $vendor_subtotal = 0;
+                     foreach($cart_items as $p_id => $qty) {
+                         foreach($products_data as $p) {
+                             if($p['id'] == $p_id && $p['vendor_id'] == $vendor_id) {
+                                  $price_val = (float)str_replace(',', '', $p['price']);
+                                  $vendor_subtotal += $price_val * $qty;
+                                  break;
+                             }
+                         }
                      }
+                     
+                     if ($vendor_subtotal > 0 && $vendor_subtotal >= $coupon['min_order_amount']) {
+                         if ($coupon['discount_type'] === 'percent') {
+                             $promo_discount = $vendor_subtotal * ($coupon['discount_value'] / 100);
+                             $promo_message = "{$coupon['discount_value']}% off Store Items";
+                         } else {
+                             $promo_discount = min($vendor_subtotal, $coupon['discount_value']);
+                             $promo_message = "₹{$coupon['discount_value']} off Store Items";
+                         }
+                         
+                         $smart_discount = 0;
+                         $reason = "";
+                     } else {
+                         // Discount conditions not met
+                         $promo_code = null;
+                     }
+                } else {
+                    $promo_code = null; // Invalid code
                 }
             } catch (PDOException $e) {
                 // Ignore DB error, just no promo
@@ -319,6 +356,72 @@ class Cart {
             }
         } catch (PDOException $e) {
             error_log("Cart Deactivation Error: " . $e->getMessage());
+        }
+    }
+    /**
+     * Merge guest cart into user cart during login
+     */
+    public function mergeCarts($user_id, $guest_session_id) {
+        try {
+            $this->pdo->beginTransaction();
+
+            // 1. Find Guest Cart
+            $stmtGuest = $this->pdo->prepare("SELECT id FROM sales_cart WHERE session_id = ? AND user_id IS NULL AND is_active = TRUE");
+            $stmtGuest->execute([$guest_session_id]);
+            $guest_cart_id = $stmtGuest->fetchColumn();
+
+            if (!$guest_cart_id) {
+                $this->pdo->commit();
+                return; // Nothing to merge
+            }
+
+            // 2. Find User's Existing Active Cart
+            $stmtUser = $this->pdo->prepare("SELECT id FROM sales_cart WHERE user_id = ? AND is_active = TRUE");
+            $stmtUser->execute([$user_id]);
+            $user_cart_id = $stmtUser->fetchColumn();
+
+            if (!$user_cart_id) {
+                // Scenario A: User had no active cart. Simply link the guest cart to the user.
+                $this->pdo->prepare("UPDATE sales_cart SET user_id = ? WHERE id = ?")
+                          ->execute([$user_id, $guest_cart_id]);
+            } else {
+                // Scenario B: Both exist. Merge items.
+                // Fetch guest items
+                $stmtItems = $this->pdo->prepare("SELECT product_id, quantity, price FROM sales_cart_products WHERE cart_id = ?");
+                $stmtItems->execute([$guest_cart_id]);
+                $guest_items = $stmtItems->fetchAll();
+
+                foreach ($guest_items as $item) {
+                    // Check if item exists in user cart
+                    $stmtCheck = $this->pdo->prepare("SELECT id FROM sales_cart_products WHERE cart_id = ? AND product_id = ?");
+                    $stmtCheck->execute([$user_cart_id, $item['product_id']]);
+                    $item_id = $stmtCheck->fetchColumn();
+
+                    if ($item_id) {
+                        // Update quantity
+                        $this->pdo->prepare("UPDATE sales_cart_products SET quantity = quantity + ? WHERE id = ?")
+                                  ->execute([$item['quantity'], $item_id]);
+                    } else {
+                        // Insert new item
+                        $this->pdo->prepare("INSERT INTO sales_cart_products (cart_id, product_id, quantity, price) VALUES (?, ?, ?, ?)")
+                                  ->execute([$user_cart_id, $item['product_id'], $item['quantity'], $item['price']]);
+                    }
+                }
+
+                // Delete guest cart as it's merged
+                $this->pdo->prepare("DELETE FROM sales_cart_products WHERE cart_id = ?")->execute([$guest_cart_id]);
+                $this->pdo->prepare("DELETE FROM sales_cart WHERE id = ?")->execute([$guest_cart_id]);
+            }
+
+            $this->pdo->commit();
+            
+            // Recalculate and update the final user cart total
+            // We have a syncCartToDb but it needs the $cart array. 
+            // Better to let the controller handle getting the merged state into session first.
+            
+        } catch (Exception $e) {
+            $this->pdo->rollBack();
+            error_log("Cart Merge Error: " . $e->getMessage());
         }
     }
 }

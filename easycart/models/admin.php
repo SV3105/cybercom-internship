@@ -38,97 +38,31 @@ class Admin {
     public function getDashboardStats() {
         $stats = [];
         try {
-            // Total products
-            $stmt = $this->pdo->query("SELECT COUNT(*) FROM catalog_product_entity");
-            $stats['total_products'] = $stmt->fetchColumn();
-            
-            // Low stock products (less than 10)
-            $stmt = $this->pdo->query("SELECT COUNT(*) FROM catalog_product_entity WHERE stock_qty < 10");
-            $stats['low_stock'] = $stmt->fetchColumn();
-            
-            // Total orders
-            $stmt = $this->pdo->query("SELECT COUNT(*) FROM sales_order");
-            $stats['total_orders'] = $stmt->fetchColumn();
-            
-            // Pending orders
-            $stmt = $this->pdo->query("SELECT COUNT(*) FROM sales_order WHERE status = 'pending'");
-            $stats['pending_orders'] = $stmt->fetchColumn();
-            
-            // Total revenue
-            $stmt = $this->pdo->query("SELECT COALESCE(SUM(grand_total), 0) FROM sales_order WHERE status != 'cancelled'");
-            $stats['total_revenue'] = $stmt->fetchColumn();
-            
             // Total users
             $stmt = $this->pdo->query("SELECT COUNT(*) FROM users");
             $stats['total_users'] = $stmt->fetchColumn();
             
-            // Recent orders
-            $stmt = $this->pdo->query("
-                SELECT o.order_id, o.increment_id, o.grand_total, o.status, o.created_at, u.name as customer_name
-                FROM sales_order o
-                LEFT JOIN users u ON o.user_id = u.id
-                ORDER BY o.created_at DESC
-                LIMIT 10
-            ");
-            $stats['recent_orders'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            // Total vendors
+            $stmt = $this->pdo->query("SELECT COUNT(*) FROM vendors");
+            $stats['total_vendors'] = $stmt->fetchColumn();
             
-            // Top selling products
+            // Recent users
             $stmt = $this->pdo->query("
-                SELECT p.name, p.image, SUM(op.quantity) as total_sold, SUM(op.total_price) as revenue
-                FROM sales_order_products op
-                JOIN sales_order o ON op.order_id = o.order_id
-                JOIN catalog_product_entity p ON op.product_id = p.entity_id
-                WHERE o.status != 'cancelled'
-                GROUP BY p.entity_id, p.name, p.image
-                ORDER BY total_sold DESC
-                LIMIT 10
+                SELECT id, name, email, created_at 
+                FROM users 
+                ORDER BY created_at DESC 
+                LIMIT 5
             ");
-            $candidates = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $stats['recent_users'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
-            $stats['top_products'] = [];
-            if (!empty($candidates)) {
-                $maxSold = $candidates[0]['total_sold'];
-                foreach ($candidates as $product) {
-                    if ($product['total_sold'] == $maxSold) {
-                        $stats['top_products'][] = $product;
-                    } else {
-                        break;
-                    }
-                }
-            }
-            
-            // Low stock products list
+            // Recent vendors
             $stmt = $this->pdo->query("
-                SELECT entity_id, name, sku, stock_qty, price
-                FROM catalog_product_entity
-                WHERE stock_qty < 10
-                ORDER BY stock_qty ASC
-                LIMIT 10
+                SELECT id, name, store_name, email, created_at 
+                FROM vendors 
+                ORDER BY created_at DESC 
+                LIMIT 5
             ");
-            $stats['low_stock_products'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-            // Category-wise Stock Data (for Chart)
-            $stmt = $this->pdo->query("
-                SELECT c.name as category, SUM(p.stock_qty) as total_stock
-                FROM catalog_product_entity p
-                LEFT JOIN catalog_category_entity c ON p.category_id = c.entity_id
-                GROUP BY c.name
-                ORDER BY total_stock DESC
-            ");
-            $stats['category_stock'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-            // Revenue Trend (Last 30 Days)
-            $stmt = $this->pdo->query("
-                SELECT 
-                    TO_CHAR(DATE(created_at), 'YYYY-MM-DD') as date,
-                    COALESCE(SUM(grand_total), 0) as revenue
-                FROM sales_order
-                WHERE status != 'cancelled' 
-                AND created_at >= CURRENT_DATE - INTERVAL '30 days'
-                GROUP BY DATE(created_at)
-                ORDER BY date ASC
-            ");
-            $stats['revenue_trend'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $stats['recent_vendors'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
         } catch (PDOException $e) {
             error_log("Dashboard stats error: " . $e->getMessage());
@@ -136,143 +70,50 @@ class Admin {
         return $stats;
     }
 
-    public function getProducts($search = '', $limit = 10, $offset = 0) {
-        $sql = "
-            SELECT p.*, c.name as category_name
-            FROM catalog_product_entity p
-            LEFT JOIN catalog_category_entity c ON p.category_id = c.entity_id
-        ";
-        
-        $params = [];
-        if (!empty($search)) {
-            $sql .= " WHERE p.name ILIKE ? OR p.sku ILIKE ? ";
-            $params = ["%$search%", "%$search%"];
-        }
-        
-        $sql .= " ORDER BY p.entity_id ASC ";
-        $sql .= " LIMIT ? OFFSET ? ";
-        $params[] = $limit;
-        $params[] = $offset;
-        
-        $stmt = $this->pdo->prepare($sql);
-        $stmt->execute($params);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-
-    public function getTotalProductsCount($search = '') {
-        $sql = "SELECT COUNT(*) FROM catalog_product_entity p";
-        $params = [];
-        if (!empty($search)) {
-            $sql .= " WHERE p.name ILIKE ? OR p.sku ILIKE ? ";
-            $params = ["%$search%", "%$search%"];
-        }
-        $stmt = $this->pdo->prepare($sql);
-        $stmt->execute($params);
-        return (int)$stmt->fetchColumn();
-    }
-
-    public function getOrders($limit = 10, $offset = 0) {
-        $stmt = $this->pdo->prepare("
-            SELECT o.*, u.name as customer_name, u.email as customer_email,
-                   (SELECT COALESCE(SUM(quantity), 0) FROM sales_order_products WHERE order_id = o.order_id) as total_item_count
-            FROM sales_order o 
-            LEFT JOIN users u ON o.user_id = u.id 
-            ORDER BY o.created_at DESC
-            LIMIT ? OFFSET ?
-        ");
+    public function getUsers($limit = 10, $offset = 0) {
+        $stmt = $this->pdo->prepare("SELECT id, name, email, created_at FROM users ORDER BY created_at DESC LIMIT ? OFFSET ?");
         $stmt->execute([$limit, $offset]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function getTotalOrdersCount() {
-        return (int)$this->pdo->query("SELECT COUNT(*) FROM sales_order")->fetchColumn();
+    public function getTotalUsersCount() {
+        return (int)$this->pdo->query("SELECT COUNT(*) FROM users")->fetchColumn();
     }
 
-    public function deleteProduct($id) {
-        $stmt = $this->pdo->prepare("DELETE FROM catalog_product_entity WHERE entity_id = ?");
-        return $stmt->execute([$id]);
-    }
-
-    public function getProductById($id) {
-        $stmt = $this->pdo->prepare("SELECT * FROM catalog_product_entity WHERE entity_id = ?");
-        $stmt->execute([$id]);
-        return $stmt->fetch(PDO::FETCH_ASSOC);
-    }
-
-    public function getCategories() {
-        return $this->pdo->query("SELECT * FROM catalog_category_entity")->fetchAll(PDO::FETCH_ASSOC);
-    }
-
-    public function getBrands() {
-        return $this->pdo->query("SELECT * FROM catalog_brand_entity")->fetchAll(PDO::FETCH_ASSOC);
-    }
-
-    public function saveProduct($id, $data) {
-        if ($id) {
-            $stmt = $this->pdo->prepare("
-                UPDATE catalog_product_entity 
-                SET sku=?, name=?, price=?, stock_qty=?, category_id=?, brand_id=?, description=?, image=?, is_featured=?, updated_at=NOW()
-                WHERE entity_id=?
-            ");
-            return $stmt->execute([
-                $data['sku'], $data['name'], $data['price'], $data['stock_qty'], 
-                $data['category_id'], $data['brand_id'], $data['description'], $data['image'], $data['is_featured'], $id
-            ]);
-        } else {
-            $stmt = $this->pdo->prepare("
-                INSERT INTO catalog_product_entity 
-                (sku, name, price, stock_qty, category_id, brand_id, description, image, is_featured, created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
-            ");
-            return $stmt->execute([
-                $data['sku'], $data['name'], $data['price'], $data['stock_qty'], 
-                $data['category_id'], $data['brand_id'], $data['description'], $data['image'], $data['is_featured']
-            ]);
-        }
-    }
-
-    public function getOrderDetails($id) {
-        $stmt = $this->pdo->prepare("
-            SELECT o.*, u.name as customer_name, u.email as customer_email 
-            FROM sales_order o 
-            LEFT JOIN users u ON o.user_id = u.id 
-            WHERE o.order_id = ?
-        ");
-        $stmt->execute([$id]);
-        return $stmt->fetch(PDO::FETCH_ASSOC);
-    }
-
-    public function getOrderItems($id) {
-        $stmt = $this->pdo->prepare("
-            SELECT i.*, p.sku, p.image 
-            FROM sales_order_products i 
-            LEFT JOIN catalog_product_entity p ON i.product_id = p.entity_id
-            WHERE i.order_id = ?
-        ");
-        $stmt->execute([$id]);
+    public function getVendors($limit = 10, $offset = 0) {
+        $stmt = $this->pdo->prepare("SELECT id, name, store_name, email, created_at FROM vendors ORDER BY created_at DESC LIMIT ? OFFSET ?");
+        $stmt->execute([$limit, $offset]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function getOrderAddress($id) {
-        $stmt = $this->pdo->prepare("SELECT * FROM sales_order_address WHERE order_id = ?");
-        $stmt->execute([$id]);
-        return $stmt->fetch(PDO::FETCH_ASSOC);
+    public function getTotalVendorsCount() {
+        return (int)$this->pdo->query("SELECT COUNT(*) FROM vendors")->fetchColumn();
     }
 
-    public function getOrderPayment($id) {
-        $stmt = $this->pdo->prepare("SELECT * FROM sales_order_payment WHERE order_id = ?");
-        $stmt->execute([$id]);
-        return $stmt->fetch(PDO::FETCH_ASSOC);
+    public function getSiteSettings() {
+        $stmt = $this->pdo->query("SELECT setting_key, setting_value FROM site_settings");
+        $settings = [];
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $settings[$row['setting_key']] = $row['setting_value'];
+        }
+        return $settings;
     }
 
-    public function updateOrderStatus($id, $status) {
-        $stmt = $this->pdo->prepare("UPDATE sales_order SET status = ? WHERE order_id = ?");
-        return $stmt->execute([$status, $id]);
-    }
-
-    public function saveOrderNotes($id, $notes) {
-        $stmt = $this->pdo->prepare("UPDATE sales_order SET admin_notes = ? WHERE order_id = ?");
-        return $stmt->execute([$notes, $id]);
+    public function updateSiteSettings($settings) {
+        $stmt = $this->pdo->prepare("
+            INSERT INTO site_settings (setting_key, setting_value, updated_at) 
+            VALUES (?, ?, NOW()) 
+            ON CONFLICT (setting_key) 
+            DO UPDATE SET setting_value = EXCLUDED.setting_value, updated_at = NOW()
+        ");
+        
+        $success = true;
+        foreach ($settings as $key => $value) {
+            if (!$stmt->execute([$key, $value])) {
+                $success = false;
+            }
+        }
+        return $success;
     }
 
     /**

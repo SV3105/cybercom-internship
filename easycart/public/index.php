@@ -14,6 +14,17 @@ require_once __DIR__ . '/../config/config.php';
 // Load product data (needed globally)
 require_once __DIR__ . '/../data/productsdata.php';
 
+// Fetch Global Site Settings
+$site_settings = [];
+try {
+    $stmt = $pdo->query("SELECT setting_key, setting_value FROM site_settings");
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        $site_settings[$row['setting_key']] = $row['setting_value'];
+    }
+} catch (Exception $e) {
+    // If table doesn't exist yet, fail gracefully
+}
+
 // Load routes
 $routes = require_once __DIR__ . '/../routes/web.php';
 
@@ -51,11 +62,19 @@ if (isset($routes[$request_uri])) {
         
         // Create controller instance based on controller type
      if ($controllerName === 'AdminController') {
-            require_once __DIR__ . '/../models/product.php';
             require_once __DIR__ . '/../models/admin.php';
-            $productModel = new Product($pdo);
             $adminModel = new Admin($pdo);
-            $controller = new $controllerName($productModel, $adminModel);
+            $controller = new $controllerName($adminModel);
+        } elseif ($controllerName === 'VendorController') {
+            require_once __DIR__ . '/../models/product.php';
+            require_once __DIR__ . '/../models/Vendor.php';
+            $productModel = new Product($pdo);
+            $vendorModel = new Vendor($pdo);
+            $controller = new $controllerName($vendorModel, $productModel);
+        } elseif ($controllerName === 'VendorAuthController') {
+            require_once __DIR__ . '/../models/Vendor.php';
+            $vendorModel = new Vendor($pdo);
+            $controller = new $controllerName($vendorModel);
         } elseif ($controllerName === 'HomeController' || $controllerName === 'ProductController') {
             require_once __DIR__ . '/../models/product.php';
             $productModel = new Product($pdo);
@@ -64,7 +83,6 @@ if (isset($routes[$request_uri])) {
             // For other controllers, we'll add proper initialization later
             $controller = new $controllerName();
         }
-        
         
         // Call the method
         if (method_exists($controller, $methodName)) {

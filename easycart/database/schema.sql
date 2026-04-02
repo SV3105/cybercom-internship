@@ -57,10 +57,6 @@ CREATE TABLE catalog_category_entity (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-
-
-
-
 -- 1.3 Brands
 CREATE TABLE catalog_brand_entity (
     entity_id SERIAL PRIMARY KEY,
@@ -92,31 +88,7 @@ CREATE TABLE sales_cart_products (
     price DECIMAL(12, 2) NOT NULL -- Cached price
 );
 
-CREATE TABLE sales_cart_address (
-    id SERIAL PRIMARY KEY,
-    cart_id INTEGER REFERENCES sales_cart(id) ON DELETE CASCADE,
-    address_type VARCHAR(50) NOT NULL, -- 'billing' or 'shipping'
-    firstname VARCHAR(255),
-    lastname VARCHAR(255),
-    email VARCHAR(255),
-    street TEXT,
-    city VARCHAR(255),
-    postcode VARCHAR(20)
-);
 
-CREATE TABLE sales_cart_shipping (
-    id SERIAL PRIMARY KEY,
-    cart_id INTEGER REFERENCES sales_cart(id) ON DELETE CASCADE,
-    method_code VARCHAR(255),
-    price DECIMAL(12, 2) DEFAULT 0.00
-);
-
-CREATE TABLE sales_cart_payment (
-    id SERIAL PRIMARY KEY,
-    cart_id INTEGER REFERENCES sales_cart(id) ON DELETE CASCADE,
-    method_code VARCHAR(255),
-    payment_info TEXT
-);
 
 -- ==========================================
 -- 3. Sales Order System

@@ -16,21 +16,77 @@ class Product {
         $this->productsData = $products;
     }
     
-    /**
-     * Get all products
-     */
-    public function getAllProducts() {
-        return $this->productsData;
+    public function getPDO() {
+        return $this->pdo;
     }
     
-    /**
-     * Get product by ID
-     */
+    public function getAllVendors() {
+        $stmt = $this->pdo->query("SELECT id, store_name FROM vendors ORDER BY store_name ASC");
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+    
+    public function getAllProducts() {
+        $stmt = $this->pdo->query("
+            SELECT p.*, c.slug as category, c.name as category_name, b.slug as brand, v.store_name, v.id as vendor_id
+            FROM catalog_product_entity p
+            LEFT JOIN catalog_category_entity c ON p.category_id = c.entity_id
+            LEFT JOIN catalog_brand_entity b ON p.brand_id = b.entity_id
+            LEFT JOIN vendors v ON p.vendor_id = v.id
+            ORDER BY p.entity_id DESC
+        ");
+        
+        $products = [];
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            // Remap db fields to storefront expectations
+            $products[] = [
+                'id' => $row['entity_id'],
+                'title' => $row['name'],
+                'price' => $row['price'],
+                'old_price' => $row['old_price'],
+                'image' => $row['image'],
+                'description' => $row['description'],
+                'category' => $row['category'],
+                'brand' => $row['brand'],
+                'featured' => $row['is_featured'],
+                'rating' => $row['rating'],
+                'review_count' => $row['review_count'],
+                'stock_qty' => $row['stock_qty'],
+                'store_name' => $row['store_name'],
+                'vendor_id' => $row['vendor_id']
+            ];
+        }
+        return $products;
+    }
+    
     public function getProductById($id) {
-        foreach ($this->productsData as $product) {
-            if ($product['id'] == $id) {
-                return $product;
-            }
+        $stmt = $this->pdo->prepare("
+            SELECT p.*, c.slug as category, b.slug as brand, v.store_name, v.id as vendor_id
+            FROM catalog_product_entity p
+            LEFT JOIN catalog_category_entity c ON p.category_id = c.entity_id
+            LEFT JOIN catalog_brand_entity b ON p.brand_id = b.entity_id
+            LEFT JOIN vendors v ON p.vendor_id = v.id
+            WHERE p.entity_id = ?
+        ");
+        $stmt->execute([$id]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($row) {
+            return [
+                'id' => $row['entity_id'],
+                'title' => $row['name'],
+                'price' => $row['price'],
+                'old_price' => $row['old_price'],
+                'image' => $row['image'],
+                'description' => $row['description'],
+                'category' => $row['category'],
+                'brand' => $row['brand'],
+                'featured' => $row['is_featured'],
+                'rating' => $row['rating'],
+                'review_count' => $row['review_count'],
+                'stock_qty' => $row['stock_qty'],
+                'store_name' => $row['store_name'],
+                'vendor_id' => $row['vendor_id']
+            ];
         }
         return null;
     }
@@ -39,7 +95,8 @@ class Product {
      * Get products by category
      */
     public function getProductsByCategory($category) {
-        return array_filter($this->productsData, function($product) use ($category) {
+        $products = $this->getAllProducts();
+        return array_filter($products, function($product) use ($category) {
             return $product['category'] === $category;
         });
     }
@@ -48,7 +105,8 @@ class Product {
      * Get products by brand
      */
     public function getProductsByBrand($brand) {
-        return array_filter($this->productsData, function($product) use ($brand) {
+        $products = $this->getAllProducts();
+        return array_filter($products, function($product) use ($brand) {
             return $product['brand'] === $brand;
         });
     }
@@ -63,7 +121,8 @@ class Product {
         $query = strtolower(trim($query));
         $terms = explode(' ', $query); // Split query into words
         
-        return array_filter($this->productsData, function($product) use ($query, $terms) {
+        $products = $this->getAllProducts();
+        return array_filter($products, function($product) use ($query, $terms) {
             
             // 1. Exact phrase match in Title (High Priority)
             if (stripos($product['title'], $query) !== false) return true;

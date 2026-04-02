@@ -25,6 +25,10 @@ class ProfileController {
 
     // ... (index method) ...
     public function index() {
+        if (isset($_SESSION['admin_user'])) {
+            header("Location: admin/dashboard");
+            exit;
+        }
         if (!isset($_SESSION['user'])) {
             header("Location: auth");
             exit;
@@ -120,6 +124,10 @@ class ProfileController {
     }
 
     public function wishlist() {
+        if (isset($_SESSION['admin_user'])) {
+            header("Location: admin/dashboard");
+            exit;
+        }
         $user_id = isset($_SESSION['user']['id']) ? $_SESSION['user']['id'] : null;
         
         // Sync Logic
